@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { useGetClassesByGradeAndSubjectQuery } from "../app/classApi";
+import ClassEnrollCard from "../components/ClassEnrollCard";
 
 const numberFromGrade = (gradeLabel) => {
   if (!gradeLabel) return null;
@@ -20,8 +20,17 @@ const numberFromGrade = (gradeLabel) => {
 
 const gradeWord = (n) => {
   const map = {
-    1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five",
-    6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven",
+    1: "One",
+    2: "Two",
+    3: "Three",
+    4: "Four",
+    5: "Five",
+    6: "Six",
+    7: "Seven",
+    8: "Eight",
+    9: "Nine",
+    10: "Ten",
+    11: "Eleven",
   };
   return map[n] || String(n);
 };
@@ -54,8 +63,6 @@ export default function EnrollSubjects({ route }) {
   );
 
   const onPressClass = (cls) => {
-    // ✅ you can change navigation target
-    // example: open Lessons list OR SubjectWithTeachers
     navigation.navigate("Lessons", {
       classId: cls._id,
       className: cls.className,
@@ -88,26 +95,18 @@ export default function EnrollSubjects({ route }) {
       ) : (
         <>
           {classes.map((c) => (
-            <Pressable
-              key={c._id}
-              onPress={() => onPressClass(c)}
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-            >
-              <View style={styles.left}>
-                <Text style={styles.cardTitle}>{c.className}</Text>
-                <Text style={styles.cardSubOk}>
-                  {c.teacherCount ? `${c.teacherCount} Teacher(s)` : "No Teachers"}
-                </Text>
-              </View>
-
-              <View style={styles.right}>
-                <Ionicons name="eye-outline" size={22} color="#214294" />
-              </View>
-            </Pressable>
+            <ClassEnrollCard key={c._id} item={c} onPress={() => onPressClass(c)} />
           ))}
 
           {classes.length === 0 && (
-            <Text style={{ textAlign: "center", color: "#64748B", fontWeight: "700", marginTop: 20 }}>
+            <Text
+              style={{
+                textAlign: "center",
+                color: "#64748B",
+                fontWeight: "700",
+                marginTop: 20,
+              }}
+            >
               No classes available for this subject.
             </Text>
           )}
@@ -148,28 +147,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    elevation: 4,
-  },
-  pressed: { transform: [{ scale: 0.99 }] },
-
-  left: { flex: 1 },
-
-  cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A" },
-
-  cardSubOk: { marginTop: 4, fontSize: 11, fontWeight: "800", color: "#10B981" },
-
-  right: { width: 40, alignItems: "flex-end" },
-
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
@@ -177,9 +154,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 18,
   },
-  modalCard: { width: "100%", maxWidth: 340, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 16 },
+  modalCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+  },
   modalTitle: { fontSize: 16, fontWeight: "900", color: "#0F172A" },
   modalText: { marginTop: 6, fontSize: 12, fontWeight: "700", color: "#475569" },
-  modalBtn: { marginTop: 14, backgroundColor: "#214294", paddingVertical: 10, borderRadius: 12, alignItems: "center" },
+  modalBtn: {
+    marginTop: 14,
+    backgroundColor: "#214294",
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
+  },
   modalBtnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12 },
 });
