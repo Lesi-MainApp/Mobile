@@ -1,9 +1,6 @@
+// app/gradeApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
-const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  process.env.REACT_APP_API_URL ||
-  "http://localhost:8080";
+import { BASE_URL } from "./api/api";
 
 export const gradeApi = createApi({
   reducerPath: "gradeApi",
@@ -18,7 +15,6 @@ export const gradeApi = createApi({
     credentials: "include",
   }),
   endpoints: (builder) => ({
-    // ✅ existing
     getGrades: builder.query({
       query: () => ({ url: "/", method: "GET" }),
       transformResponse: (res) => {
@@ -28,7 +24,6 @@ export const gradeApi = createApi({
       },
     }),
 
-    // ✅ existing
     getStreamsByGradeNumber: builder.query({
       query: (gradeNumber) => ({
         url: `/streams/${gradeNumber}`,
@@ -40,16 +35,12 @@ export const gradeApi = createApi({
       },
     }),
 
-    // ✅ NEW: get full grade document (includes subjects for 1-11, streams for 12-13)
     getGradeDetail: builder.query({
       query: (gradeNumber) => ({
         url: `/${gradeNumber}`,
         method: "GET",
       }),
-      transformResponse: (res) => {
-        // expected: { grade: {...} }
-        return res?.grade || null;
-      },
+      transformResponse: (res) => res?.grade || null,
     }),
   }),
 });

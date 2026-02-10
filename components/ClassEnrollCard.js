@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 
-export default function ClassEnrollCard({ item, onPress }) {
+export default function ClassEnrollCard({ item, onPressView, onPressEnroll, status }) {
   const teacherName = useMemo(() => {
     if (item?.teachers?.length > 0) return item.teachers[0]?.name || "Teacher";
     return item?.teacherCount ? `${item.teacherCount} Teacher(s)` : "No Teacher";
@@ -12,8 +12,29 @@ export default function ClassEnrollCard({ item, onPress }) {
     return u.length > 0 ? u : "";
   }, [item]);
 
+  // ✅ button status
+  const btnLabel =
+    status === "approved" ? "View" : status === "pending" ? "Pending" : "Enroll now";
+
+  const disabled = status === "pending";
+
+  const btnBg =
+    status === "approved"
+      ? "#16A34A" // green
+      : status === "pending"
+      ? "#94A3B8" // gray
+      : "#2563EB"; // blue
+
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+    <Pressable
+      onPress={status === "approved" ? onPressView : onPressEnroll}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.card,
+        pressed && !disabled && styles.pressed,
+        disabled && { opacity: 0.85 },
+      ]}
+    >
       {/* LEFT IMAGE (backend url only) */}
       <View style={styles.avatarWrap}>
         {imgUrl ? (
@@ -26,7 +47,7 @@ export default function ClassEnrollCard({ item, onPress }) {
       {/* CENTER TEXT */}
       <View style={styles.info}>
         <Text style={styles.subject} numberOfLines={1}>
-          {item?.subjectName || "Subject"}
+          {item?.subjectName || item?.subject || "Subject"}
         </Text>
 
         <Text style={styles.teacher} numberOfLines={1}>
@@ -34,15 +55,19 @@ export default function ClassEnrollCard({ item, onPress }) {
         </Text>
 
         <Text style={styles.meta} numberOfLines={1}>
-          {item?.gradeNumber ? `Grade ${item.gradeNumber}` : "Grade"} •{" "}
-          {item?.className || "Class"}
+          {item?.gradeNumber
+            ? `Grade ${item.gradeNumber}`
+            : item?.grade
+            ? `Grade ${item.grade}`
+            : "Grade"}{" "}
+          • {item?.className || "Class"}
         </Text>
       </View>
 
-      {/* RIGHT BUTTON */}
+      {/* RIGHT BUTTON (same UI block, just dynamic) */}
       <View style={styles.right}>
-        <View style={styles.btn}>
-          <Text style={styles.btnText}>Enroll now</Text>
+        <View style={[styles.btn, { backgroundColor: btnBg }]}>
+          <Text style={styles.btnText}>{btnLabel}</Text>
         </View>
       </View>
     </Pressable>
@@ -72,7 +97,7 @@ const styles = StyleSheet.create({
   },
   avatar: { width: "100%", height: "100%" },
 
-  // ✅ when backend has no imageUrl
+  // when backend has no imageUrl
   avatarFallback: { width: "100%", height: "100%", backgroundColor: "#CBD5E1" },
 
   info: { flex: 1, marginLeft: 12 },
@@ -98,7 +123,6 @@ const styles = StyleSheet.create({
   right: { justifyContent: "center", marginLeft: 10 },
 
   btn: {
-    backgroundColor: "#2563EB",
     paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 16,

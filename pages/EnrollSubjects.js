@@ -1,15 +1,19 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   Modal,
+  TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+
 import { useGetClassesByGradeAndSubjectQuery } from "../app/classApi";
+import { useGetMyEnrollRequestsQuery, useRequestEnrollMutation } from "../app/enrollApi";
 import ClassEnrollCard from "../components/ClassEnrollCard";
 
 const numberFromGrade = (gradeLabel) => {
@@ -19,33 +23,23 @@ const numberFromGrade = (gradeLabel) => {
 };
 
 const gradeWord = (n) => {
-  const map = {
-    1: "One",
-    2: "Two",
-    3: "Three",
-    4: "Four",
-    5: "Five",
-    6: "Six",
-    7: "Seven",
-    8: "Eight",
-    9: "Nine",
-    10: "Ten",
-    11: "Eleven",
-  };
+  const map = { 1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven" };
   return map[n] || String(n);
 };
 
 export default function EnrollSubjects({ route }) {
   const navigation = useNavigation();
+
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [studentName, setStudentName] = useState("");
+  const [studentPhone, setStudentPhone] = useState("");
 
   const gradeLabel = route?.params?.grade || "Grade 4";
   const gradeNumberParam = route?.params?.gradeNumber;
   const subjectName = route?.params?.subjectName || "";
 
-  const gradeNo = useMemo(() => {
-    return Number(gradeNumberParam) || numberFromGrade(gradeLabel);
-  }, [gradeNumberParam, gradeLabel]);
+  const gradeNo = useMemo(() => Number(gradeNumberParam) || numberFromGrade(gradeLabel), [gradeNumberParam, gradeLabel]);
 
   const pageTitle = useMemo(() => {
     if (!gradeNo) return "Select Grade";
@@ -62,7 +56,54 @@ export default function EnrollSubjects({ route }) {
     { skip: !gradeNo || !subjectName }
   );
 
-  const onPressClass = (cls) => {
+  // ✅ my requests to decide button text
+  const {
+    data: myReqData,
+    isLoading: myReqLoading,
+    refetch: refetchMyReq,
+  } = useGetMyEnrollRequestsQuery();
+
+  const myReqMap = useMemo(() => {
+    const map = {};
+    const list = myReqData?.requests || [];
+    for (const r of list) {
+      const classId = String(r?.classId || r?.classDetails?.classId || "");
+      if (classId) map[classId] = r; // store request
+    }
+    return map;
+  }, [myReqData]);
+
+  const [requestEnroll, { isLoading: submitting }] = useRequestEnrollMutation();
+
+  const openModal = (cls) => {
+    setSelectedClass(cls);
+    setStudentName("");
+    setStudentPhone("");
+    setModalOpen(true);
+  };
+
+  const submitEnroll = async () => {
+    try {
+      if (!selectedClass?._id) return;
+      if (!studentName.trim()) return alert("Enter student name");
+      if (!studentPhone.trim()) return alert("Enter phone number");
+
+      await requestEnroll({
+        classId: selectedClass._id,
+        studentName: studentName.trim(),
+        studentPhone: studentPhone.trim(),
+      }).unwrap();
+
+      setModalOpen(false);
+      setSelectedClass(null);
+      refetchMyReq();
+      alert("Request sent!");
+    } catch (e) {
+      alert(String(e?.data?.message || e?.error || "Request failed"));
+    }
+  };
+
+  const goLessons = (cls) => {
     navigation.navigate("Lessons", {
       classId: cls._id,
       className: cls.className,
@@ -93,40 +134,78 @@ export default function EnrollSubjects({ route }) {
           </Pressable>
         </View>
       ) : (
-        <>
-          {classes.map((c) => (
-            <ClassEnrollCard key={c._id} item={c} onPress={() => onPressClass(c)} />
-          ))}
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+          {classes.map((c) => {
+            const req = myReqMap[String(c._id)];
+            const status = req?.status || ""; // pending | approved | rejected | ""
+
+            return (
+              <ClassEnrollCard
+                key={c._id}
+                item={c}
+                status={status === "approved" ? "approved" : status === "pending" ? "pending" : ""}
+                onPressView={() => goLessons(c)}
+                onPressEnroll={() => openModal(c)}
+              />
+            );
+          })}
 
           {classes.length === 0 && (
-            <Text
-              style={{
-                textAlign: "center",
-                color: "#64748B",
-                fontWeight: "700",
-                marginTop: 20,
-              }}
-            >
-              No classes available for this subject.
-            </Text>
+            <Text style={styles.centerInfo}>No classes available for this subject.</Text>
           )}
-        </>
+        </ScrollView>
       )}
 
-      {/* Optional modal if you want */}
+      {/* ✅ ENROLL MODAL */}
       <Modal visible={modalOpen} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Not Available</Text>
-            <Text style={styles.modalText}>This is locked right now.</Text>
+            <Text style={styles.modalTitle}>Enroll Request</Text>
+            <Text style={styles.modalText}>
+              {selectedClass?.className ? `Class: ${selectedClass.className}` : ""}
+            </Text>
 
-            <TouchableOpacity
-              onPress={() => setModalOpen(false)}
-              style={styles.modalBtn}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.modalBtnText}>OK</Text>
-            </TouchableOpacity>
+            <TextInput
+              value={studentName}
+              onChangeText={setStudentName}
+              placeholder="Student Name"
+              style={styles.input}
+            />
+            <TextInput
+              value={studentPhone}
+              onChangeText={setStudentPhone}
+              placeholder="Phone Number"
+              keyboardType="phone-pad"
+              style={styles.input}
+            />
+
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 12 }}>
+              <TouchableOpacity
+                onPress={() => setModalOpen(false)}
+                style={[styles.modalBtn, { backgroundColor: "#E2E8F0" }]}
+                activeOpacity={0.9}
+                disabled={submitting}
+              >
+                <Text style={[styles.modalBtnText, { color: "#0F172A" }]}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={submitEnroll}
+                style={[styles.modalBtn, { backgroundColor: "#16A34A" }]}
+                activeOpacity={0.9}
+                disabled={submitting}
+              >
+                <Text style={styles.modalBtnText}>
+                  {submitting ? "Submitting..." : "Submit"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {myReqLoading && (
+              <Text style={{ marginTop: 10, color: "#64748B", fontWeight: "800", fontSize: 12 }}>
+                Syncing status...
+              </Text>
+            )}
           </View>
         </View>
       </Modal>
@@ -147,6 +226,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  centerInfo: {
+    textAlign: "center",
+    color: "#64748B",
+    fontWeight: "700",
+    marginTop: 20,
+  },
+
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
@@ -156,17 +242,29 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: "100%",
-    maxWidth: 340,
+    maxWidth: 360,
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 16,
   },
   modalTitle: { fontSize: 16, fontWeight: "900", color: "#0F172A" },
   modalText: { marginTop: 6, fontSize: 12, fontWeight: "700", color: "#475569" },
-  modalBtn: {
-    marginTop: 14,
-    backgroundColor: "#214294",
+
+  input: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
+    paddingHorizontal: 12,
     paddingVertical: 10,
+    fontWeight: "800",
+    color: "#0F172A",
+    backgroundColor: "#F8FAFC",
+  },
+
+  modalBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 12,
     alignItems: "center",
   },
