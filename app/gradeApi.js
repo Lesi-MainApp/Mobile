@@ -18,6 +18,7 @@ export const gradeApi = createApi({
     getGrades: builder.query({
       query: () => ({ url: "/", method: "GET" }),
       transformResponse: (res) => {
+        // backend returns { grades: [...] }
         if (Array.isArray(res)) return res;
         if (Array.isArray(res?.grades)) return res.grades;
         return [];
@@ -26,6 +27,8 @@ export const gradeApi = createApi({
 
     getStreamsByGradeNumber: builder.query({
       query: (gradeNumber) => ({
+        // backend: GET /api/grade/streams/:value
+        // value can be gradeNumber (12/13) OR gradeId (ObjectId) because you implemented getStreamsSmart
         url: `/streams/${gradeNumber}`,
         method: "GET",
       }),
@@ -35,6 +38,14 @@ export const gradeApi = createApi({
       },
     }),
 
+    // ✅ IMPORTANT: used by quiz/paper subject selection
+    // backend: GET /api/grade/:gradeNumber  -> { grade: {...} }
+    // gradeDoc example:
+    // {
+    //   grade: 1,
+    //   subjects: [{ _id, subject }],
+    //   streams: [{ _id, stream, subjects:[{_id, subject}] }]
+    // }
     getGradeDetail: builder.query({
       query: (gradeNumber) => ({
         url: `/${gradeNumber}`,

@@ -1,71 +1,101 @@
+// pages/DailyQuiz.js
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 
-const numberFromGrade = (gradeLabel) => {
-  if (!gradeLabel) return null;
-  const match = String(gradeLabel).match(/\d+/);
-  return match ? parseInt(match[0], 10) : null;
-};
+import useUser from "../app/hooks/useUser";
+import { useGetGradeDetailQuery } from "../app/gradeApi";
+
+const norm = (v) => String(v || "").trim().toLowerCase();
 
 export default function DailyQuiz() {
   const navigation = useNavigation();
   const { user } = useUser();
-
   const [selectedSubject, setSelectedSubject] = useState("");
 
-  const gradeNum = useMemo(() => numberFromGrade(user?.grade), [user?.grade]);
-  const isAL = user?.level === "al";
+  const level = user?.selectedLevel || null;
+  const gradeNumber = Number(user?.selectedGradeNumber || 0) || null;
+  const stream = user?.selectedStream || null;
 
-  const grade1to5Subjects = ["පරිසරය", "සිංහල", "Maths", "English"];
-  const grade6to11Subjects = ["සිංහල", "Maths", "Science", "History", "ICT"];
+  const isAL = gradeNumber === 12 || gradeNumber === 13 || level === "al";
 
-  const streams12to13 = [
-    { key: "Science Stream", subjects: ["Biology", "Physics", "Chemistry"] },
-    { key: "Maths Stream", subjects: ["Combined Maths", "Physics", "Chemistry", "ICT"] },
-    { key: "Tech", subjects: ["BST", "ET", "SFT", "ICT"] },
-    { key: "Art", subjects: ["සිංහල", "History", "Political"] },
-    { key: "Commerce", subjects: ["Econ", "ICT", "Account", "BS"] },
-  ];
+  const { data: gradeDoc, isLoading, isFetching, error } =
+    useGetGradeDetailQuery(gradeNumber, { skip: !gradeNumber });
 
   const subjectsToShow = useMemo(() => {
-    if (!user?.level || !user?.grade) return [];
+    if (!gradeDoc) return [];
 
-    if (user.level === "primary") return grade1to5Subjects;
-    if (user.level === "ol") return grade6to11Subjects;
+    // grades 1..11
+    if (!isAL) {
+      const list = Array.isArray(gradeDoc?.subjects) ? gradeDoc.subjects : [];
+      return list.map((x) => x?.subject).filter(Boolean);
+    }
 
-    // AL
-    const stream = streams12to13.find((s) => s.key === user?.stream);
-    return stream ? stream.subjects : [];
-  }, [user?.level, user?.grade, user?.stream]);
+    // grades 12/13 => stream subjects
+    const streams = Array.isArray(gradeDoc?.streams) ? gradeDoc.streams : [];
+    const st = streams.find((s) => norm(s?.stream) === norm(stream));
+    const subs = Array.isArray(st?.subjects) ? st.subjects : [];
+    return subs.map((x) => x?.subject).filter(Boolean);
+  }, [gradeDoc, isAL, stream]);
 
-  const canStart = !!gradeNum && !!selectedSubject && (!isAL || !!user?.stream);
+  const canStart = !!gradeNumber && !!selectedSubject && (!isAL || !!stream);
 
-  const onStart = () => {
+  const onContinue = () => {
     if (!canStart) return;
 
-    // ✅ Navigate to DailyQuizMenu
     navigation.navigate("DailyQuizMenu", {
-      grade: user?.grade,
-      level: user?.level,
-      stream: user?.stream || null,
+      level,
+      gradeNumber,
+      stream: stream || null,
       subject: selectedSubject,
+      mode: "daily",
     });
   };
 
-  if (!user?.grade) {
+  if (!gradeNumber || (isAL && !stream)) {
     return (
       <View style={styles.center}>
-        <Text style={styles.title}>No Grade Selected</Text>
-        <Text style={styles.sub}>Please select your grade first.</Text>
-
+        <Text style={styles.title}>Grade / Stream not selected</Text>
+        <Text style={styles.helperText}>
+          Please select your grade (and stream for A/L) first.
+        </Text>
         <Pressable
-          style={styles.btn}
+          style={styles.primaryBtn}
           onPress={() => navigation.navigate("MainSelectgrade")}
         >
-          <Text style={styles.btnText}>Go to Grade Selection</Text>
+          <Text style={styles.primaryBtnText}>Go to Grade Selection</Text>
         </Pressable>
+      </View>
+    );
+  }
+
+  if (isLoading || isFetching) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.helperText}>Loading subjects...</Text>
+      </View>
+    );
+  }
+
+  if (error || !gradeDoc) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>Subjects not available</Text>
+        <Text style={styles.helperText}>Check backend Grade data.</Text>
+      </View>
+    );
+  }
+
+  if (!subjectsToShow.length) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>No Subjects Found</Text>
+        <Text style={styles.helperText}>
+          Please add subjects in backend for grade {gradeNumber}
+          {isAL ? " and stream" : ""}.
+        </Text>
       </View>
     );
   }
@@ -74,14 +104,15 @@ export default function DailyQuiz() {
     <View style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.title}>Daily Quiz</Text>
+        <Text style={styles.subTitle}>Select Subject</Text>
 
-        <Text style={styles.info}>
-          Grade: <Text style={styles.bold}>{user.grade}</Text>
+        <Text style={styles.infoRow}>
+          Grade: <Text style={styles.bold}>{gradeNumber}</Text>
         </Text>
 
         {isAL && (
-          <Text style={styles.info}>
-            Stream: <Text style={styles.bold}>{user.stream || "Not selected"}</Text>
+          <Text style={styles.infoRow}>
+            Stream: <Text style={styles.bold}>{stream}</Text>
           </Text>
         )}
 
@@ -101,7 +132,7 @@ export default function DailyQuiz() {
         </View>
 
         <Pressable
-          onPress={onStart}
+          onPress={onContinue}
           disabled={!canStart}
           style={({ pressed }) => [
             styles.startBtn,
@@ -109,11 +140,11 @@ export default function DailyQuiz() {
             pressed && canStart && styles.pressed,
           ]}
         >
-          <Text style={styles.startBtnText}>Start</Text>
+          <Text style={styles.startBtnText}>Continue</Text>
         </Pressable>
 
         {!canStart && (
-          <Text style={styles.helperText}>Select subject to continue.</Text>
+          <Text style={styles.helperText}>Please select a subject.</Text>
         )}
       </View>
     </View>
@@ -121,103 +152,21 @@ export default function DailyQuiz() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: "#0F172A",
-    textAlign: "center",
-  },
-
-  info: {
-    marginTop: 10,
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#334155",
-    textAlign: "center",
-  },
+  screen: { flex: 1, backgroundColor: "#F8FAFC", alignItems: "center", justifyContent: "center", padding: 16 },
+  card: { width: "100%", maxWidth: 420, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 },
+  title: { fontSize: 20, fontWeight: "900", color: "#0F172A", textAlign: "center" },
+  subTitle: { fontSize: 13, color: "#334155", textAlign: "center", marginTop: 6, marginBottom: 14 },
+  infoRow: { fontSize: 12, fontWeight: "700", color: "#334155", textAlign: "center", marginTop: 4 },
   bold: { fontWeight: "900", color: "#0F172A" },
-
-  label: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 6,
-    marginTop: 14,
-  },
-
-  pickerWrap: {
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 14,
-    overflow: "hidden",
-    backgroundColor: "#F1F5F9",
-  },
+  label: { fontSize: 12, fontWeight: "800", color: "#0F172A", marginBottom: 6, marginTop: 14 },
+  pickerWrap: { borderWidth: 1, borderColor: "#CBD5E1", borderRadius: 14, overflow: "hidden", backgroundColor: "#F1F5F9" },
   picker: { width: "100%", color: "#0F172A" },
-
-  startBtn: {
-    height: 52,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2563EB",
-    marginTop: 16,
-  },
+  startBtn: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#2563EB", marginTop: 16 },
   startBtnDisabled: { backgroundColor: "#94A3B8" },
   startBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
-
   pressed: { transform: [{ scale: 0.99 }], opacity: 0.92 },
-
-  helperText: {
-    marginTop: 10,
-    textAlign: "center",
-    color: "#64748B",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  center: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  sub: {
-    marginTop: 8,
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
-    textAlign: "center",
-  },
-  btn: {
-    marginTop: 14,
-    backgroundColor: "#214294",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  btnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12 },
+  helperText: { marginTop: 10, textAlign: "center", color: "#64748B", fontSize: 12, fontWeight: "600" },
+  center: { flex: 1, backgroundColor: "#F8FAFC", alignItems: "center", justifyContent: "center", padding: 16 },
+  primaryBtn: { marginTop: 14, backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
+  primaryBtnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12 },
 });

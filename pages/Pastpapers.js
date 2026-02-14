@@ -1,58 +1,69 @@
+// pages/PastPapers.js
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 
+import useUser from "../app/hooks/useUser";
+import { useGetGradeDetailQuery } from "../app/gradeApi";
 
-const numberFromGrade = (gradeLabel) => {
-  if (!gradeLabel) return null;
-  const match = String(gradeLabel).match(/\d+/);
-  return match ? parseInt(match[0], 10) : null;
-};
+const norm = (v) => String(v || "").trim().toLowerCase();
 
 export default function PastPapers() {
   const navigation = useNavigation();
   const { user } = useUser();
   const [selectedSubject, setSelectedSubject] = useState("");
 
-  const gradeNum = useMemo(() => numberFromGrade(user?.grade), [user?.grade]);
-  const isAL = user?.level === "al";
+  // ✅ get grade/level/stream from backend user fields
+  const level = user?.selectedLevel || null;
+  const gradeNumber = Number(user?.selectedGradeNumber || 0) || null;
+  const stream = user?.selectedStream || null;
 
-  const grade1to5Subjects = ["පරිසරය", "සිංහල", "Maths", "English"];
-  const grade6to11Subjects = ["සිංහල", "Maths", "Science", "History", "ICT"];
+  const isAL = level === "al" || gradeNumber === 12 || gradeNumber === 13;
 
-  const streams12to13 = [
-    { key: "Science Stream", subjects: ["Biology", "Physics", "Chemistry"] },
-    { key: "Maths Stream", subjects: ["Combined Maths", "Physics", "Chemistry", "ICT"] },
-    { key: "Tech", subjects: ["BST", "ET", "SFT", "ICT"] },
-    { key: "Art", subjects: ["සිංහල", "History", "Political"] },
-    { key: "Commerce", subjects: ["Econ", "ICT", "Account", "BS"] },
-  ];
+  const { data: gradeDoc, isLoading, isFetching, error } =
+    useGetGradeDetailQuery(gradeNumber, { skip: !gradeNumber });
 
   const subjectsToShow = useMemo(() => {
-    if (!user?.level || !user?.grade) return [];
-    if (user.level === "primary") return grade1to5Subjects;
-    if (user.level === "ol") return grade6to11Subjects;
+    if (!gradeDoc) return [];
 
-    const stream = streams12to13.find((s) => s.key === user?.stream);
-    return stream ? stream.subjects : [];
-  }, [user?.level, user?.grade, user?.stream]);
+    // grades 1..11
+    if (!isAL) {
+      const list = Array.isArray(gradeDoc?.subjects) ? gradeDoc.subjects : [];
+      return list.map((x) => x?.subject).filter(Boolean);
+    }
 
-  const canStart = !!gradeNum && !!selectedSubject && (!isAL || !!user?.stream);
+    // grades 12/13 => stream subjects
+    const streams = Array.isArray(gradeDoc?.streams) ? gradeDoc.streams : [];
+    const streamObj = streams.find((s) => norm(s?.stream) === norm(stream));
+    const streamSubjects = Array.isArray(streamObj?.subjects)
+      ? streamObj.subjects
+      : [];
+
+    return streamSubjects.map((x) => x?.subject).filter(Boolean);
+  }, [gradeDoc, isAL, stream]);
+
+  const canStart = !!gradeNumber && !!selectedSubject && (!isAL || !!stream);
 
   const onContinue = () => {
     if (!canStart) return;
 
     navigation.navigate("PastpaperMenu", {
-      grade: user?.grade,
-      level: user?.level,
-      stream: user?.stream || null,
+      gradeNumber,
+      level,
+      stream: stream || null,
       subject: selectedSubject,
       mode: "past",
     });
   };
 
-  if (!user?.grade || (isAL && !user?.stream)) {
+  if (!gradeNumber) {
     return (
       <View style={styles.center}>
         <Text style={styles.title}>Grade / Stream not selected</Text>
@@ -69,6 +80,50 @@ export default function PastPapers() {
     );
   }
 
+  if (isAL && !stream) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>Stream not selected</Text>
+        <Text style={styles.helperText}>Please select your stream first.</Text>
+        <Pressable
+          style={styles.primaryBtn}
+          onPress={() => navigation.navigate("MainSelectgrade")}
+        >
+          <Text style={styles.primaryBtnText}>Go to Grade Selection</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (isLoading || isFetching) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.helperText}>Loading subjects...</Text>
+      </View>
+    );
+  }
+
+  if (error || !gradeDoc) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>Subjects not available</Text>
+        <Text style={styles.helperText}>Please check backend Grade data.</Text>
+      </View>
+    );
+  }
+
+  if (!subjectsToShow.length) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>No Subjects Found</Text>
+        <Text style={styles.helperText}>
+          Please add subjects in backend for this grade{isAL ? " / stream" : ""}.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
@@ -76,12 +131,12 @@ export default function PastPapers() {
         <Text style={styles.subTitle}>Select Subject</Text>
 
         <Text style={styles.infoRow}>
-          Grade: <Text style={styles.bold}>{user.grade}</Text>
+          Grade: <Text style={styles.bold}>{gradeNumber}</Text>
         </Text>
 
         {isAL && (
           <Text style={styles.infoRow}>
-            Stream: <Text style={styles.bold}>{user.stream}</Text>
+            Stream: <Text style={styles.bold}>{stream}</Text>
           </Text>
         )}
 
@@ -121,8 +176,27 @@ export default function PastPapers() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F8FAFC", alignItems: "center", justifyContent: "center", padding: 16 },
-  card: { width: "100%", maxWidth: 420, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 },
+  screen: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
   title: { fontSize: 20, fontWeight: "900", color: "#0F172A", textAlign: "center" },
   subTitle: { fontSize: 13, color: "#334155", textAlign: "center", marginTop: 6, marginBottom: 14 },
   infoRow: { fontSize: 12, fontWeight: "700", color: "#334155", textAlign: "center", marginTop: 4 },

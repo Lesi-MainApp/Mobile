@@ -1,8 +1,7 @@
-// src/api/features/liveSlice.js
+// app/features/liveSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  // if you want to open a detail screen later
   selectedLiveId: null,
 };
 

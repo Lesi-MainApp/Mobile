@@ -38,6 +38,7 @@ import DailyQuizMenu from "./pages/DailyQuizzMenu";
 import TopicWiseMenu from "./pages/TopicWisemenu";
 import ModelPaperMenu from "./pages/ModelPaperMenu";
 import PastpaperMenu from "./pages/PastpaperMenu";
+import ReviewPage from "./pages/ReviewPage";
 
 import PaperPage from "./pages/paper";
 
@@ -137,6 +138,7 @@ export default function App() {
               name="PastpaperMenu"
               component={PastpaperMenuWithLayout}
             />
+            <Stack.Screen name="ReviewPage" component={ReviewPage} />
 
             {/* Paper */}
             <Stack.Screen name="PaperPage" component={PaperPage} />

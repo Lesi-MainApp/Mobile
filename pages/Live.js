@@ -1,6 +1,14 @@
-// src/pages/Live.js
+// pages/Live.js
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, FlatList, Linking, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  FlatList,
+  Linking,
+  ActivityIndicator,
+} from "react-native";
 import { useGetStudentLivesQuery } from "../app/liveApi";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -9,7 +17,9 @@ const formatDate = (iso) => {
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
   } catch {
     return "";
   }
@@ -44,7 +54,9 @@ export default function Live() {
         if (!t || Number.isNaN(t)) return false;
         return now - t <= ONE_DAY_MS; // still valid
       })
-      .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+      .sort(
+        (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+      );
   }, [data]);
 
   const onJoin = async (url) => {
@@ -81,9 +93,7 @@ export default function Live() {
       ) : null}
 
       {lives.length === 0 ? (
-        <Text style={{ color: "#64748B", fontWeight: "700" }}>
-          No live classes right now.
-        </Text>
+        <Text style={{ color: "#64748B", fontWeight: "700" }}>No live classes right now.</Text>
       ) : null}
 
       <FlatList
@@ -92,25 +102,24 @@ export default function Live() {
         contentContainerStyle={{ paddingBottom: 40, gap: 12 }}
         renderItem={({ item }) => {
           const title = item?.title || "Live Class";
-          const teacher = (item?.teacherNames?.[0] ? `- ${item.teacherNames[0]}` : "- Teacher");
+          const teacher = item?.teacherNames?.[0]
+            ? `- ${item.teacherNames[0]}`
+            : "- Teacher";
           const dateText = formatDate(item?.scheduledAt);
           const timeText = formatTime(item?.scheduledAt);
 
           return (
             <View style={styles.card}>
-              {/* Title + Teacher */}
               <View style={styles.topRow}>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.teacher}>{teacher}</Text>
               </View>
 
-              {/* Date & Time */}
               <View style={styles.metaRow}>
                 <Text style={styles.meta}>Date : {dateText || "-"}</Text>
                 <Text style={styles.meta}>Time : {timeText || "-"}</Text>
               </View>
 
-              {/* Button */}
               <Pressable style={styles.btn} onPress={() => onJoin(item?.zoomLink)}>
                 <Text style={styles.btnText}>Join Now</Text>
               </Pressable>

@@ -1,18 +1,25 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import PaperComponent from "../components/PaperComponent";
 
-const BG = "#F8FAFC";
-const PREV_TEXT = "#595757";
-const NEXT_BG = "#1F5EEB";
-const CARD_BG = "#D6E0E8";
+const BG = "#FFFFFF";
+const TEXT_DARK = "#0F172A";
 
-// ✅ adjust this if your bottom bar is taller/shorter
-const BOTTOM_BAR_SPACE = 92;
+const FINISH_BLUE = "#2563EB";
+const TIMER_BG = "#FFECEC";
+const TIMER_TEXT = "#E11D48";
+
+const NEXT_BG = "#0B1220";
+const NEXT_TEXT = "#FFFFFF";
+
+// ✅ Bottom bar background
+const BOTTOM_BAR_BG = "#94A3B8";
 
 function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
+  const safe = Math.max(0, Number(seconds || 0));
+  const m = Math.floor(safe / 60);
+  const s = safe % 60;
   const mm = String(m).padStart(2, "0");
   const ss = String(s).padStart(2, "0");
   return `${mm}:${ss}`;
@@ -21,53 +28,61 @@ function formatTime(seconds) {
 export default function PaperPage({ navigation, route }) {
   const paperId = route?.params?.paperId || "paper1";
   const title = route?.params?.title || "Daily Quiz Paper";
-  const timeMin = route?.params?.timeMin || 10;
-  const attemptNo = route?.params?.attemptNo || 1;
+  const timeMin = Number(route?.params?.timeMin || 10);
+  const attemptNo = Number(route?.params?.attemptNo || 1);
 
+  const intervalRef = useRef(null);
+  const finishedRef = useRef(false); // ✅ prevent double finish
+
+  // ✅ Your questions (replace with backend data later)
   const questions = useMemo(
     () => [
       {
         id: "q1",
-        text: "What is the capital city of Sri Lanka?",
-        options: ["Colombo", "Kandy", "Galle", "Jaffna"],
-        correctIndex: 0,
+        text: "Which part of the cell is known as the powerhouse?",
+        options: ["Nucleus", "Ribosome", "Mitochondria", "Vacuole"],
+        correctIndex: 2,
+        explanationVideoUrl: "",
       },
       {
         id: "q2",
         text: "2 + 5 = ?",
         options: ["5", "6", "7", "8"],
         correctIndex: 2,
-      },
-      {
-        id: "q3",
-        text: "Which one is a programming language?",
-        options: ["HTML", "CSS", "JavaScript", "Figma"],
-        correctIndex: 2,
+        explanationVideoUrl: "",
       },
     ],
     []
   );
 
   const total = questions.length;
+
+  // answers: { [index]: optionIndex }
   const [answers, setAnswers] = useState({});
   const [qIndex, setQIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(timeMin * 60);
 
+  // ✅ timer
   useEffect(() => {
-    const t = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(t);
-          onFinish(true);
-          return 0;
-        }
+        if (prev <= 1) return 0;
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
+
+  // ✅ Auto-finish when time is 0
+  useEffect(() => {
+    if (secondsLeft === 0) {
+      onFinish(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft]);
 
   const current = questions[qIndex];
   const selectedOption = answers[qIndex];
@@ -90,36 +105,81 @@ export default function PaperPage({ navigation, route }) {
     return score;
   };
 
-  const onFinish = (auto = false) => {
+  // ✅ Build review items for ReviewPage
+  const buildReviewItems = () => {
+    return questions.map((q, i) => {
+      const userIndex = typeof answers[i] === "number" ? answers[i] : null;
+      const correctIndex = q.correctIndex;
+
+      const userAnswer =
+        userIndex === null || userIndex === undefined
+          ? ""
+          : q.options?.[userIndex] ?? "";
+
+      const correctAnswer = q.options?.[correctIndex] ?? "";
+
+      return {
+        _id: q.id || String(i),
+        question: q.text || "",
+        answers: q.options || [],
+        correctAnswerIndex: correctIndex,
+        userAnswerIndex: userIndex,
+        userAnswer,
+        correctAnswer,
+        isCorrect: userIndex === correctIndex,
+        explanationVideoUrl: q.explanationVideoUrl || "",
+      };
+    });
+  };
+
+  const onFinish = (autoFinish = false) => {
+    if (finishedRef.current) return; // ✅ block double call
+    finishedRef.current = true;
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
     const score = calculateScore();
-    navigation.navigate("Result", {
+    const scorePercent = total > 0 ? Math.round((score / total) * 100) : 0;
+
+    // ✅ go to your new ReviewPage (same UI like screenshot)
+    navigation.replace("ReviewPage", {
       paperId,
       title,
       attemptNo,
       total,
       score,
-      autoFinish: auto,
+      scorePercent,
+      autoFinish,
+      items: buildReviewItems(),
     });
+
+    // If you still want Result page sometimes, use:
+    // navigation.navigate("Result", { paperId, title, attemptNo, total, score, autoFinish });
   };
 
   return (
     <View style={styles.screen}>
-      {/* ✅ TOP ROW (NO OVERLAY) */}
-      <View style={styles.topRow}>
+      <View style={styles.topBar}>
+        <Pressable
+          onPress={() => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            navigation.goBack();
+          }}
+          hitSlop={10}
+        >
+          <Ionicons name="close" size={22} color={TEXT_DARK} />
+        </Pressable>
+
         <View style={styles.timerPill}>
           <Text style={styles.timerText}>{formatTime(secondsLeft)}</Text>
         </View>
 
-        <Pressable
-          onPress={() => onFinish(false)}
-          style={({ pressed }) => [styles.finishBtn, pressed && styles.pressed]}
-        >
-          <Text style={styles.finishText}>Finish</Text>
+        <Pressable onPress={() => onFinish(false)} hitSlop={10}>
+          <Text style={styles.finishText}>FINISH</Text>
         </Pressable>
       </View>
 
-      {/* ✅ MIDDLE (CENTER) */}
-      <View style={styles.mid}>
+      <View style={styles.centerArea}>
         <View style={styles.centerBox}>
           <PaperComponent
             index={qIndex}
@@ -131,17 +191,8 @@ export default function PaperPage({ navigation, route }) {
         </View>
       </View>
 
-      {/* ✅ BOTTOM ROW (WITH SPACE FROM BOTTOM BAR) */}
-      <View style={styles.bottomRow}>
-        <Pressable
-          onPress={goPrev}
-          disabled={!canPrev}
-          style={({ pressed }) => [
-            styles.prevBtn,
-            pressed && canPrev && styles.pressed,
-            !canPrev && styles.disabled,
-          ]}
-        >
+      <View style={styles.bottomBar}>
+        <Pressable onPress={goPrev} disabled={!canPrev}>
           <Text style={[styles.prevText, !canPrev && styles.disabledText]}>
             Previous
           </Text>
@@ -150,11 +201,7 @@ export default function PaperPage({ navigation, route }) {
         <Pressable
           onPress={goNext}
           disabled={!canNext}
-          style={({ pressed }) => [
-            styles.nextBtn,
-            pressed && canNext && styles.pressed,
-            !canNext && styles.nextDisabled,
-          ]}
+          style={[styles.nextBtn, !canNext && styles.nextDisabled]}
         >
           <Text style={styles.nextText}>
             {canNext ? "Next Question" : "Last Question"}
@@ -166,52 +213,43 @@ export default function PaperPage({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  // ✅ IMPORTANT: paddingBottom gives space for BottomNavigationBar so buttons won't hide/overlay
   screen: {
     flex: 1,
     backgroundColor: BG,
-    paddingBottom: BOTTOM_BAR_SPACE,
   },
 
-  topRow: {
-  paddingHorizontal: 16,
-  paddingTop: 14,
-  paddingBottom: 12,
-  marginTop: 50,        // ✅ ADD THIS (moves timer/finish down)
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  zIndex: 2,
-},
-
+  topBar: {
+    paddingTop: 14,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 
   timerPill: {
-    backgroundColor: CARD_BG,
+    backgroundColor: TIMER_BG,
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#B7C6D1",
+    paddingHorizontal: 16,
+    paddingVertical: 7,
   },
-  timerText: { fontSize: 13, fontWeight: "900", color: "#0F172A" },
 
-  finishBtn: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
+  timerText: {
+    color: TIMER_TEXT,
+    fontWeight: "800",
+    fontSize: 12,
   },
-  finishText: { fontSize: 13, fontWeight: "900", color: "#0F172A" },
 
-  // ✅ middle uses remaining space only (no overlay)
-  mid: {
+  finishText: {
+    color: FINISH_BLUE,
+    fontWeight: "800",
+    fontSize: 12,
+  },
+
+  centerArea: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 10,
   },
 
   centerBox: {
@@ -220,38 +258,44 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 
-  bottomRow: {
+  bottomBar: {
+    backgroundColor: BOTTOM_BAR_BG,
     paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: -10,
+    paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    // ✅ add space from bottom bar
-    marginBottom: -40,
+    gap: 12,
   },
 
-  prevBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+  prevText: {
+    color: TEXT_DARK,
+    fontWeight: "800",
+    fontSize: 13,
   },
-  prevText: { color: PREV_TEXT, fontSize: 14, fontWeight: "900" },
+
+  disabledText: {
+    color: "#E2E8F0",
+    opacity: 0.7,
+  },
 
   nextBtn: {
     backgroundColor: NEXT_BG,
     paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    flexDirection: "row",
+    paddingHorizontal: 18,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 150,
   },
-  nextText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900" },
 
-  nextDisabled: { opacity: 0.7 },
-  disabled: { opacity: 0.5 },
-  disabledText: { color: "#9A9A9A" },
+  nextText: {
+    color: NEXT_TEXT,
+    fontWeight: "900",
+    fontSize: 13,
+  },
 
-  pressed: { opacity: 0.92, transform: [{ scale: 0.99 }] },
+  nextDisabled: {
+    opacity: 0.6,
+  },
 });

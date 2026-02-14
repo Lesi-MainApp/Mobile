@@ -1,8 +1,14 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 
-const CARD_BG = "#D6E0E8";
 const TEXT_DARK = "#0F172A";
+
+// ✅ Light gray card like screenshot
+const CARD_BG = "#F8FAFC";
+const BORDER = "#E2E8F0";
+
+const RADIO_BORDER = "#CBD5E1";
+const RADIO_FILL = "#1D4ED8";
 
 export default function PaperComponent({
   index,
@@ -11,36 +17,33 @@ export default function PaperComponent({
   selectedOption,
   onSelect,
 }) {
+  const qNo = index + 1;
+
   return (
     <View style={styles.wrap}>
-      <Text style={styles.qNo}>
-        Question {index + 1} / {total}
-      </Text>
+      <Text style={styles.smallTop}>{`QUESTION ${qNo} OF ${total}`}</Text>
 
-      <Text style={styles.question}>{question.text}</Text>
+      <Text style={styles.questionText}>{question?.text || ""}</Text>
 
       <View style={styles.optionsWrap}>
-        {question.options.map((opt, i) => {
-          const isSelected = selectedOption === i;
+        {(question?.options || []).map((opt, i) => {
+          const selected = selectedOption === i;
 
           return (
             <Pressable
-              key={i}
-              onPress={() => onSelect(i)}
+              key={`${question?.id || "q"}_${i}`}
+              onPress={() => onSelect?.(i)}
               style={({ pressed }) => [
                 styles.optionCard,
-                isSelected && styles.optionSelected,
                 pressed && styles.pressed,
+                selected && styles.optionSelected,
               ]}
             >
-              <Text
-                style={[
-                  styles.optionText,
-                  isSelected && styles.optionTextSelected,
-                ]}
-              >
-                {opt}
-              </Text>
+              <Text style={styles.optionText}>{opt}</Text>
+
+              <View style={[styles.radioOuter, selected && styles.radioOuterOn]}>
+                {selected ? <View style={styles.radioInner} /> : null}
+              </View>
             </Pressable>
           );
         })}
@@ -50,64 +53,64 @@ export default function PaperComponent({
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    width: "100%",
-    alignItems: "center",
-  },
+  wrap: { paddingTop: 10 },
 
-  qNo: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: TEXT_DARK,
-    textAlign: "center",
-    marginBottom: 12,
-  },
-
-  question: {
-    width: "100%",
-    fontSize: 16,
-    fontWeight: "900",
-    color: TEXT_DARK,
-    textAlign: "center",
-    lineHeight: 22,
+  smallTop: {
+    color: "#8FA3BF",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 2,
     marginBottom: 14,
   },
 
-  optionsWrap: {
-    width: "100%",
-    gap: 12,
+  questionText: {
+    color: TEXT_DARK,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "800",
+    marginBottom: 20,
   },
 
+  optionsWrap: { gap: 14 },
+
   optionCard: {
-    width: "100%",
-    borderRadius: 16,
     backgroundColor: CARD_BG,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "#B7C6D1",
+    borderColor: BORDER,
+    borderRadius: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 
   optionSelected: {
-    borderColor: "#1F5EEB",
-    borderWidth: 2,
-    backgroundColor: "#E8F0FF",
+    borderColor: "#C7D2FE",
   },
 
   optionText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#233046",
-    textAlign: "left",
+    color: TEXT_DARK,
+    fontSize: 15,
+    fontWeight: "700",
   },
 
-  optionTextSelected: {
-    color: "#1F5EEB",
-    fontWeight: "900",
+  radioOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: RADIO_BORDER,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioOuterOn: { borderColor: RADIO_FILL },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: RADIO_FILL,
   },
 
-  pressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.99 }],
-  },
+  pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
 });

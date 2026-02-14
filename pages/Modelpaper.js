@@ -1,58 +1,56 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 
+import useUser from "../app/hooks/useUser";
+import { useGetGradeDetailQuery } from "../app/gradeApi";
 
-const numberFromGrade = (gradeLabel) => {
-  if (!gradeLabel) return null;
-  const match = String(gradeLabel).match(/\d+/);
-  return match ? parseInt(match[0], 10) : null;
-};
+const norm = (v) => String(v || "").trim().toLowerCase();
 
 export default function ModelPaper() {
   const navigation = useNavigation();
   const { user } = useUser();
   const [selectedSubject, setSelectedSubject] = useState("");
 
-  const gradeNum = useMemo(() => numberFromGrade(user?.grade), [user?.grade]);
-  const isAL = user?.level === "al";
+  const level = user?.selectedLevel || null;
+  const gradeNumber = Number(user?.selectedGradeNumber || 0) || null;
+  const stream = user?.selectedStream || null;
 
-  const grade1to5Subjects = ["පරිසරය", "සිංහල", "Maths", "English"];
-  const grade6to11Subjects = ["සිංහල", "Maths", "Science", "History", "ICT"];
+  const isAL = gradeNumber === 12 || gradeNumber === 13 || level === "al";
 
-  const streams12to13 = [
-    { key: "Science Stream", subjects: ["Biology", "Physics", "Chemistry"] },
-    { key: "Maths Stream", subjects: ["Combined Maths", "Physics", "Chemistry", "ICT"] },
-    { key: "Tech", subjects: ["BST", "ET", "SFT", "ICT"] },
-    { key: "Art", subjects: ["සිංහල", "History", "Political"] },
-    { key: "Commerce", subjects: ["Econ", "ICT", "Account", "BS"] },
-  ];
+  const { data: gradeDoc, isLoading, isFetching, error } =
+    useGetGradeDetailQuery(gradeNumber, { skip: !gradeNumber });
 
   const subjectsToShow = useMemo(() => {
-    if (!user?.level || !user?.grade) return [];
-    if (user.level === "primary") return grade1to5Subjects;
-    if (user.level === "ol") return grade6to11Subjects;
+    if (!gradeDoc) return [];
 
-    const stream = streams12to13.find((s) => s.key === user?.stream);
-    return stream ? stream.subjects : [];
-  }, [user?.level, user?.grade, user?.stream]);
+    if (!isAL) {
+      const list = Array.isArray(gradeDoc?.subjects) ? gradeDoc.subjects : [];
+      return list.map((x) => x?.subject).filter(Boolean);
+    }
 
-  const canStart = !!gradeNum && !!selectedSubject && (!isAL || !!user?.stream);
+    const streams = Array.isArray(gradeDoc?.streams) ? gradeDoc.streams : [];
+    const st = streams.find((s) => norm(s?.stream) === norm(stream));
+    const subs = Array.isArray(st?.subjects) ? st.subjects : [];
+    return subs.map((x) => x?.subject).filter(Boolean);
+  }, [gradeDoc, isAL, stream]);
+
+  const canStart = !!gradeNumber && !!selectedSubject && (!isAL || !!stream);
 
   const onContinue = () => {
     if (!canStart) return;
 
     navigation.navigate("ModelPaperMenu", {
-      grade: user?.grade,
-      level: user?.level,
-      stream: user?.stream || null,
+      level,
+      gradeNumber,
+      stream: stream || null,
       subject: selectedSubject,
       mode: "model",
     });
   };
 
-  if (!user?.grade || (isAL && !user?.stream)) {
+  if (!gradeNumber || (isAL && !stream)) {
     return (
       <View style={styles.center}>
         <Text style={styles.title}>Grade / Stream not selected</Text>
@@ -69,6 +67,36 @@ export default function ModelPaper() {
     );
   }
 
+  if (isLoading || isFetching) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.helperText}>Loading subjects...</Text>
+      </View>
+    );
+  }
+
+  if (error || !gradeDoc) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>Subjects not available</Text>
+        <Text style={styles.helperText}>Check backend Grade data.</Text>
+      </View>
+    );
+  }
+
+  if (!subjectsToShow.length) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>No Subjects Found</Text>
+        <Text style={styles.helperText}>
+          Please add subjects in backend for grade {gradeNumber}
+          {isAL ? " and stream" : ""}.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
@@ -76,12 +104,12 @@ export default function ModelPaper() {
         <Text style={styles.subTitle}>Select Subject</Text>
 
         <Text style={styles.infoRow}>
-          Grade: <Text style={styles.bold}>{user.grade}</Text>
+          Grade: <Text style={styles.bold}>{gradeNumber}</Text>
         </Text>
 
         {isAL && (
           <Text style={styles.infoRow}>
-            Stream: <Text style={styles.bold}>{user.stream}</Text>
+            Stream: <Text style={styles.bold}>{stream}</Text>
           </Text>
         )}
 
