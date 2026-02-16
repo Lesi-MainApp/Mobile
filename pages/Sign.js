@@ -29,6 +29,10 @@ import { setUser, updateUserFields } from "../app/features/userSlice";
 import { useSignupMutation, useSigninMutation } from "../app/authApi";
 import { useSaveStudentGradeSelectionMutation } from "../app/userApi";
 
+// ✅ NEW
+import { useSaveLanguageSelectionMutation } from "../app/languageApi";
+import { loadStoredLanguage } from "../app/languageStorage";
+
 const BG_INPUT = "#F1F5F9";
 const PLACEHOLDER = "#97A4B8";
 const PRIMARY = "#214294";
@@ -51,6 +55,9 @@ export default function Sign({ navigation, route }) {
   const [signup] = useSignupMutation();
   const [signin] = useSigninMutation();
   const [saveGradeSelection] = useSaveStudentGradeSelectionMutation();
+
+  // ✅ NEW
+  const [saveLanguageSelection] = useSaveLanguageSelectionMutation();
 
   const selectedLevel = useSelector((s) => s?.auth?.selectedLevel);
   const selectedGrade = useSelector((s) => s?.auth?.selectedGrade);
@@ -112,6 +119,17 @@ export default function Sign({ navigation, route }) {
       const status = e?.status || e?.originalStatus;
       if (status === 409) return;
       console.log("save grade selection failed:", e);
+    }
+  };
+
+  // ✅ NEW: save language to backend (after login)
+  const trySaveLanguageOnce = async () => {
+    try {
+      const stored = await loadStoredLanguage();
+      const lang = stored === "en" ? "en" : "si";
+      await saveLanguageSelection({ language: lang }).unwrap();
+    } catch (e) {
+      console.log("save language failed:", e);
     }
   };
 
@@ -192,6 +210,9 @@ export default function Sign({ navigation, route }) {
       dispatch(setUser(res?.user || null));
 
       await trySaveSelectionOnce(res?.user);
+
+      // ✅ NEW: save selected language to backend
+      await trySaveLanguageOnce();
 
       navigation.replace("Home");
     } catch (e) {

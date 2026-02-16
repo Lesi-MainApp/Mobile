@@ -7,7 +7,7 @@ import { useGetLessonsByClassIdQuery } from "../app/lessonApi";
 
 export default function Lessons({ route }) {
   const [fontsLoaded] = useFonts({
-    FMEmanee: require("../assets/fonts/FMEmanee x.ttf"),
+    FMEmanee: require("../assets/fonts/FMEmaneex.ttf"),
   });
 
   const navigation = useNavigation();

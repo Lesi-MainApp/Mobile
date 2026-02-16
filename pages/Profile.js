@@ -20,7 +20,7 @@ const TAB_BAR_HEIGHT = 90;
 
 export default function Profile({ route }) {
   const [fontsLoaded] = useFonts({
-    FMEmanee: require("../assets/fonts/FMEmanee x.ttf"),
+    FMEmanee: require("../assets/fonts/FMEmaneex.ttf"),
   });
 
   // ✅ get logged user from redux (no context)

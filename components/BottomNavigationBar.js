@@ -1,24 +1,23 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
+
+import useT from "../app/i18n/useT";
 
 const LMS_SIZE = 90;
 const BAR_RADIUS = 24;
 const BAR_HEIGHT = 64;
 
-const ICON_COLOR = "#1153ec"; // ✅ your fixed color
+const ICON_COLOR = "#1153ec";
 
 export default function BottomNavigationBar() {
   const navigation = useNavigation();
-  const route = useRoute();
+  const { t, navFont } = useT();
 
-  // ✅ get user from redux instead of context
   const user = useSelector((s) => s?.user?.user) || useSelector((s) => s?.auth?.user);
 
-  // ✅ same logic (hide LMS for A/L)
-  // If your backend stores level as selectedLevel, use that
   const level = user?.selectedLevel || user?.level || null;
   const showLMS = level !== "al";
 
@@ -28,13 +27,15 @@ export default function BottomNavigationBar() {
         <View style={[styles.bar, !showLMS && styles.barNoLms]}>
           <NavItem
             icon="home"
-            label="Home"
+            label={t("navHome")}
+            labelStyle={navFont("bold")}
             onPress={() => navigation.navigate("Home")}
           />
 
           <NavItem
             icon="radio"
-            label="Live"
+            label={t("navLive")}
+            labelStyle={navFont("bold")}
             onPress={() => navigation.navigate("Live")}
           />
 
@@ -42,13 +43,15 @@ export default function BottomNavigationBar() {
 
           <NavItem
             icon="bar-chart"
-            label="Result"
+            label={t("navResult")}
+            labelStyle={navFont("bold")}
             onPress={() => navigation.navigate("Result")}
           />
 
           <NavItem
             icon="clipboard"
-            label="Enroll"
+            label={t("navEnroll")}
+            labelStyle={navFont("bold")}
             onPress={() => navigation.navigate("EnrollSubjects")}
           />
         </View>
@@ -57,24 +60,23 @@ export default function BottomNavigationBar() {
       {showLMS && (
         <Pressable
           onPress={() => navigation.navigate("LMS")}
-          style={({ pressed }) => [
-            styles.centerButton,
-            pressed && styles.centerPressed,
-          ]}
+          style={({ pressed }) => [styles.centerButton, pressed && styles.centerPressed]}
         >
           <Ionicons name="school" size={36} color={ICON_COLOR} />
-          <Text style={styles.centerLabel}>LMS</Text>
+          <Text style={[styles.centerLabel, navFont("bold")]}>{t("navLms")}</Text>
         </Pressable>
       )}
     </View>
   );
 }
 
-function NavItem({ icon, label, onPress }) {
+function NavItem({ icon, label, onPress, labelStyle }) {
   return (
     <Pressable style={styles.item} onPress={onPress}>
       <Ionicons name={icon} size={28} color={ICON_COLOR} />
-      <Text style={styles.text}>{label}</Text>
+      <Text style={[styles.text, labelStyle]} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

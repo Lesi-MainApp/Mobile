@@ -8,6 +8,8 @@ import { clearGradeSelection } from "../app/features/authSlice";
 import { updateUserFields, setUser } from "../app/features/userSlice";
 import { useSaveStudentGradeSelectionMutation } from "../app/userApi";
 
+import useT from "../app/i18n/useT";
+
 /* ✅ Ribbon with centered number */
 function RibbonV({ color = "#F97316", number = "01" }) {
   return (
@@ -42,6 +44,8 @@ export default function LMS() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
+  const { t, lang, sinFont } = useT();
+
   const userFromUserSlice = useSelector((s) => s?.user?.user);
   const userFromAuthSlice = useSelector((s) => s?.auth?.user);
   const user = userFromUserSlice || userFromAuthSlice || null;
@@ -59,17 +63,21 @@ export default function LMS() {
   const gradeNumberDb =
     user?.selectedGradeNumber ?? user?.gradeNumber ?? user?.grade ?? null;
 
+  // ✅ A/L not available
   if (level === "al") {
     return (
       <View style={styles.center}>
-        <Text style={styles.centerTitle}>LMS Not Available</Text>
-        <Text style={styles.centerDesc}>
+        <Text style={[styles.centerTitle, lang === "si" && sinFont("bold")]}>
+          LMS Not Available
+        </Text>
+        <Text style={[styles.centerDesc, lang === "si" && sinFont()]}>
           LMS is available for Primary and O/L only.
         </Text>
       </View>
     );
   }
 
+  // ✅ Auto-save grade selection if needed
   useEffect(() => {
     const run = async () => {
       if (!token) return;
@@ -106,28 +114,41 @@ export default function LMS() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, selectedLevel, selectedGrade, selectedStream, user?.gradeSelectionLocked]);
 
+  // ✅ No grade selected
   if (!gradeNumberDb) {
     return (
       <View style={styles.center}>
-        <Text style={styles.centerTitle}>No Grade Selected</Text>
-        <Text style={styles.centerDesc}>Please select your grade first.</Text>
+        <Text style={[styles.centerTitle, lang === "si" && sinFont("bold")]}>
+          No Grade Selected
+        </Text>
+        <Text style={[styles.centerDesc, lang === "si" && sinFont()]}>
+          Please select your grade first.
+        </Text>
 
         <Pressable
           style={styles.backBtn}
           onPress={() => navigation.replace("MainSelectgrade")}
         >
-          <Text style={styles.backBtnText}>Go to Grade Selection</Text>
+          <Text style={[styles.backBtnText, lang === "si" && sinFont("bold")]}>
+            Go to Grade Selection
+          </Text>
         </Pressable>
 
         {!!saving && (
-          <Text style={[styles.centerDesc, { marginTop: 10 }]}>Saving grade...</Text>
+          <Text style={[styles.centerDesc, { marginTop: 10 }, lang === "si" && sinFont()]}>
+            Saving grade...
+          </Text>
         )}
       </View>
     );
   }
 
+  // ✅ Grade Text (Legacy Sinhala FM typed + English)
   const gradeWord = useMemo(() => {
-    const words = {
+    const g = Number(gradeNumberDb);
+
+    // English
+    const en = {
       1: "One",
       2: "Two",
       3: "Three",
@@ -139,11 +160,35 @@ export default function LMS() {
       9: "Nine",
       10: "Ten",
       11: "Eleven",
+      12: "Twelve",
+      13: "Thirteen",
     };
-    return words[Number(gradeNumberDb)] || String(gradeNumberDb);
-  }, [gradeNumberDb]);
 
-  const fullGradeText = `Grade ${gradeWord}`;
+    // ✅ Your legacy Sinhala (FM typed)
+    const si = {
+      1: t("grade1"),
+      2: t("grade2"),
+      3: t("grade3"),
+      4: t("grade4"),
+      5: t("grade5"),
+      6: t("grade6"),
+      7: t("grade7"),
+      8: t("grade8"),
+      9: t("grade9"),
+      10: t("grade10"),
+      11: t("grade11"),
+      12: t("grade12"),
+      13: t("grade13"),
+    };
+
+    if (lang === "si") return si[g] || `${g} ${t("grade")}`;
+    return en[g] || String(g);
+  }, [gradeNumberDb, lang, t]);
+
+  const fullGradeText = useMemo(() => {
+    if (lang === "si") return gradeWord;
+    return `Grade ${gradeWord}`;
+  }, [gradeWord, lang]);
 
   const gradeColor = useMemo(() => {
     const colorMap = {
@@ -158,13 +203,15 @@ export default function LMS() {
       9: "#F43F5E",
       10: "#6366F1",
       11: "#10B981",
+      12: "#0EA5E9",
+      13: "#F97316",
     };
     return colorMap[Number(gradeNumberDb)] || "#3B82F6";
   }, [gradeNumberDb]);
 
   const numberText = String(gradeNumberDb).padStart(2, "0");
 
-  // ✅ this is what Subjects uses
+  // ✅ keep this param same for your Subjects page (DO NOT CHANGE)
   const gradeLabel = `Grade ${gradeNumberDb}`;
 
   return (
@@ -178,7 +225,9 @@ export default function LMS() {
         </View>
 
         <View pointerEvents="none" style={styles.absoluteCenter}>
-          <Text style={styles.cardText}>{fullGradeText}</Text>
+          <Text style={[styles.cardText, lang === "si" && sinFont("bold")]}>
+            {fullGradeText}
+          </Text>
         </View>
       </Pressable>
     </ScrollView>

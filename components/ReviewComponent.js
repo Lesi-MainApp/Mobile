@@ -31,7 +31,7 @@ function getYouTubeId(url = "") {
 
 export default function ReviewComponent({ route }) {
   const [fontsLoaded] = useFonts({
-    FMEmanee: require("../assets/fonts/FMEmanee x.ttf"),
+    FMEmanee: require("../assets/fonts/FMEmaneex.ttf"),
   });
 
   // ✅ you can pass an array: route.params.reviews

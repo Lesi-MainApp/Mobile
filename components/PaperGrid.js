@@ -7,8 +7,11 @@ import pastpapers from "../assets/pastpapers.png";
 import modelpapers from "../assets/modelpapers.png";
 import dailyquizz from "../assets/dailyquizz.png";
 
+import useT from "../app/i18n/useT";
+
 export default function PaperGrid() {
   const navigation = useNavigation();
+  const { t, sinFont } = useT();
 
   const [active, setActive] = useState(null);
   const timeoutRef = useRef(null);
@@ -21,16 +24,14 @@ export default function PaperGrid() {
   ];
 
   const papers = [
-    { title: "Daily Quiz", img: dailyquizz, route: "DailyQuiz" },
-    { title: "Topic wise papers", img: topicwisepaper, route: "TopicWisePaper" },
-    { title: "Model papers", img: modelpapers, route: "ModelPaper" },
-    { title: "Past papers", img: pastpapers, route: "PastPapers" },
+    { title: t("dailyQuiz"), img: dailyquizz, route: "DailyQuiz" },
+    { title: t("topicWise"), img: topicwisepaper, route: "TopicWisePaper" },
+    { title: t("modelPapers"), img: modelpapers, route: "ModelPaper" },
+    { title: t("pastPapers"), img: pastpapers, route: "PastPapers" },
   ];
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
+    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
   }, []);
 
   const zoomOut = (index) => {
@@ -44,7 +45,6 @@ export default function PaperGrid() {
 
   const onPressCard = (index) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
     if (active !== null && active !== index) zoomOut(active);
 
     Animated.spring(scales[index], {
@@ -56,8 +56,6 @@ export default function PaperGrid() {
     setActive(index);
 
     const selected = papers[index];
-
-    // ✅ Navigate after small animation delay
     timeoutRef.current = setTimeout(() => {
       zoomOut(index);
       if (selected?.route) navigation.navigate(selected.route);
@@ -67,14 +65,12 @@ export default function PaperGrid() {
   return (
     <View style={styles.grid}>
       {papers.map((item, idx) => (
-        <Pressable
-          key={item.title}
-          onPress={() => onPressCard(idx)}
-          style={styles.cardWrap}
-        >
+        <Pressable key={`${idx}`} onPress={() => onPressCard(idx)} style={styles.cardWrap}>
           <Animated.View style={[styles.card, { transform: [{ scale: scales[idx] }] }]}>
             <Image source={item.img} style={styles.icon} />
-            <Text style={styles.text}>{item.title}</Text>
+            <Text style={[styles.text, sinFont("bold")]} numberOfLines={2}>
+              {item.title}
+            </Text>
           </Animated.View>
         </Pressable>
       ))}
@@ -91,11 +87,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingBottom: 16,
   },
-  cardWrap: {
-    width: "48%",
-    height: 140,
-    marginBottom: 12,
-  },
+  cardWrap: { width: "48%", height: 140, marginBottom: 12 },
   card: {
     flex: 1,
     backgroundColor: "#FDFEFF",
@@ -114,10 +106,7 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     textAlign: "center",
     marginBottom: 8,
+    paddingHorizontal: 8,
   },
-  icon: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain",
-  },
+  icon: { width: 80, height: 80, resizeMode: "contain" },
 });

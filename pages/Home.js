@@ -16,12 +16,14 @@ import FinishedExam from "../components/FinishedExam";
 import ProgressBar from "../components/ProgressBar";
 import PaperGrid from "../components/PaperGrid";
 
-const { height } = Dimensions.get("window");
+import useT from "../app/i18n/useT";
 
-// ✅ Set this to match your bottom navigation height
+const { height } = Dimensions.get("window");
 const TAB_BAR_HEIGHT = 90;
 
 export default function Home() {
+  const { t, sinFont } = useT();
+
   return (
     <SafeAreaView style={styles.safe} edges={["left", "right"]}>
       <KeyboardAvoidingView
@@ -36,27 +38,23 @@ export default function Home() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.screen}>
-            {/* 🔹 TOP DASHBOARD (FIXED HEIGHT) */}
             <View style={styles.dashboard}>
               <View style={styles.leftCol}>
                 <Islandrank />
               </View>
-
               <View style={styles.rightCol}>
                 <Coins />
                 <FinishedExam />
               </View>
             </View>
 
-            {/* 🔹 PROGRESS */}
             <View style={styles.progressWrapper}>
               <ProgressBar progress={0.65} />
             </View>
 
-            {/* 🔹 TITLE */}
-            <Text style={styles.sectionTitle}>Paper Library</Text>
+            {/* ✅ Only add sinFont, keep your style */}
+            <Text style={[styles.sectionTitle, sinFont("bold")]}>{t("paperLibrary")}</Text>
 
-            {/* 🔹 GRID */}
             <View style={styles.gridWrapper}>
               <PaperGrid />
             </View>
@@ -68,50 +66,27 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-
-  // ✅ This prevents overlay by bottom navigation
-  content: {
-    paddingBottom: TAB_BAR_HEIGHT + 20,
-  },
-
-  screen: {
-    backgroundColor: "#F8FAFC",
-  },
+  safe: { flex: 1, backgroundColor: "#F8FAFC" },
+  content: { paddingBottom: TAB_BAR_HEIGHT + 20 },
+  screen: { backgroundColor: "#F8FAFC" },
 
   dashboard: {
     height: height * 0.3,
     flexDirection: "row",
     padding: 16,
   },
+  leftCol: { flex: 1, marginRight: 12 },
+  rightCol: { flex: 1, justifyContent: "space-between" },
 
-  leftCol: {
-    flex: 1,
-    marginRight: 12,
-  },
-
-  rightCol: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-
-  progressWrapper: {
-    paddingHorizontal: 16,
-    marginTop: 4,
-  },
+  progressWrapper: { paddingHorizontal: 16, marginTop: 4 },
 
   sectionTitle: {
     marginTop: 12,
     marginLeft: 16,
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "700", // ✅ ok, Sinhala will be forced to normal by sinFont()
     color: "#0F172A",
   },
 
-  gridWrapper: {
-    paddingBottom: 8,
-  },
+  gridWrapper: { paddingBottom: 8 },
 });

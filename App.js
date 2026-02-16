@@ -1,16 +1,19 @@
 // App.js
-import React from "react";
-import { StatusBar } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StatusBar, View, ActivityIndicator } from "react-native";
 import { Provider } from "react-redux";
 import store from "./app/store";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+import * as Font from "expo-font";
+
 import RootLayout from "./Layouts/RootLayout";
 import SecondLayout from "./Layouts/SecondLayout";
 
 import SplashScreen from "./pages/SplashScreen";
+import LanguageSelect from "./pages/LanguageSelect";
 import MainSelectgrade from "./pages/MainSelectgrade";
 import Sign from "./pages/Sign";
 import OTP from "./pages/OTP";
@@ -39,7 +42,6 @@ import TopicWiseMenu from "./pages/TopicWisemenu";
 import ModelPaperMenu from "./pages/ModelPaperMenu";
 import PastpaperMenu from "./pages/PastpaperMenu";
 import ReviewPage from "./pages/ReviewPage";
-
 import PaperPage from "./pages/paper";
 
 const Stack = createNativeStackNavigator();
@@ -59,88 +61,91 @@ const LiveWithLayout = withSecondLayout(Live);
 const LMSWithLayout = withSecondLayout(LMS);
 const ResultWithLayout = withSecondLayout(Result);
 const ProfileWithLayout = withSecondLayout(Profile);
+
 const LessonsWithLayout = withSecondLayout(Lessons);
 const ViewLessonWithLayout = withSecondLayout(ViewLesson);
 const IndexNumberWithLayout = withSecondLayout(IndexNumber);
 const SubjectsWithLayout = withSecondLayout(Subjects);
 const SubjectWithTeachersWithLayout = withSecondLayout(SubjectWithTeachers);
+
 const EnrollSubjectsWithLayout = withSecondLayout(EnrollSubjects);
+
 const DailyQuizWithLayout = withSecondLayout(DailyQuiz);
 const TopicWisePaperWithLayout = withSecondLayout(TopicWisePaper);
 const ModelPaperWithLayout = withSecondLayout(ModelPaper);
 const PastPapersWithLayout = withSecondLayout(PastPapers);
+
 const DailyQuizMenuWithLayout = withSecondLayout(DailyQuizMenu);
 const TopicWiseMenuWithLayout = withSecondLayout(TopicWiseMenu);
 const ModelPaperMenuWithLayout = withSecondLayout(ModelPaperMenu);
 const PastpaperMenuWithLayout = withSecondLayout(PastpaperMenu);
 
 export default function App() {
+  const [fontsReady, setFontsReady] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await Font.loadAsync({
+          // ✅ Splash page font
+          FM_Derana: require("./assets/fonts/FM_Derana.ttf"),
+
+          // ✅ All other pages font
+          FMEmaneex: require("./assets/fonts/FMEmaneex.ttf"),
+        });
+      } catch (e) {
+        console.log("Font load error:", e);
+      } finally {
+        setFontsReady(true);
+      }
+    })();
+  }, []);
+
+  if (!fontsReady) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <Provider store={store}>
       <NavigationContainer>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
         <RootLayout>
-          <Stack.Navigator
-            screenOptions={{ headerShown: false }}
-            initialRouteName="Splash"
-          >
+          <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
             <Stack.Screen name="Splash" component={SplashScreen} />
-
-            {/* ✅ Auth flow */}
+            <Stack.Screen name="LanguageSelect" component={LanguageSelect} />
             <Stack.Screen name="Sign" component={Sign} />
             <Stack.Screen name="OTP" component={OTP} />
             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
             <Stack.Screen name="MainSelectgrade" component={MainSelectgrade} />
 
-            {/* ✅ Main app */}
             <Stack.Screen name="Home" component={HomeWithLayout} />
             <Stack.Screen name="Live" component={LiveWithLayout} />
             <Stack.Screen name="LMS" component={LMSWithLayout} />
             <Stack.Screen name="Result" component={ResultWithLayout} />
             <Stack.Screen name="Profile" component={ProfileWithLayout} />
 
-            {/* Other pages */}
             <Stack.Screen name="Subjects" component={SubjectsWithLayout} />
-            <Stack.Screen
-              name="SubjectWithTeachers"
-              component={SubjectWithTeachersWithLayout}
-            />
+            <Stack.Screen name="SubjectWithTeachers" component={SubjectWithTeachersWithLayout} />
             <Stack.Screen name="IndexNumber" component={IndexNumberWithLayout} />
             <Stack.Screen name="Lessons" component={LessonsWithLayout} />
             <Stack.Screen name="ViewLesson" component={ViewLessonWithLayout} />
-            <Stack.Screen
-              name="EnrollSubjects"
-              component={EnrollSubjectsWithLayout}
-            />
+            <Stack.Screen name="EnrollSubjects" component={EnrollSubjectsWithLayout} />
 
             <Stack.Screen name="DailyQuiz" component={DailyQuizWithLayout} />
-            <Stack.Screen
-              name="TopicWisePaper"
-              component={TopicWisePaperWithLayout}
-            />
+            <Stack.Screen name="TopicWisePaper" component={TopicWisePaperWithLayout} />
             <Stack.Screen name="ModelPaper" component={ModelPaperWithLayout} />
             <Stack.Screen name="PastPapers" component={PastPapersWithLayout} />
 
-            <Stack.Screen
-              name="DailyQuizMenu"
-              component={DailyQuizMenuWithLayout}
-            />
-            <Stack.Screen
-              name="TopicWiseMenu"
-              component={TopicWiseMenuWithLayout}
-            />
-            <Stack.Screen
-              name="ModelPaperMenu"
-              component={ModelPaperMenuWithLayout}
-            />
-            <Stack.Screen
-              name="PastpaperMenu"
-              component={PastpaperMenuWithLayout}
-            />
-            <Stack.Screen name="ReviewPage" component={ReviewPage} />
+            <Stack.Screen name="DailyQuizMenu" component={DailyQuizMenuWithLayout} />
+            <Stack.Screen name="TopicWiseMenu" component={TopicWiseMenuWithLayout} />
+            <Stack.Screen name="ModelPaperMenu" component={ModelPaperMenuWithLayout} />
+            <Stack.Screen name="PastpaperMenu" component={PastpaperMenuWithLayout} />
 
-            {/* Paper */}
+            <Stack.Screen name="ReviewPage" component={ReviewPage} />
             <Stack.Screen name="PaperPage" component={PaperPage} />
           </Stack.Navigator>
         </RootLayout>
