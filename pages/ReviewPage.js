@@ -1,16 +1,28 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable, FlatList, SafeAreaView, Modal, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  FlatList,
+  SafeAreaView,
+  Modal,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import YoutubePlayer from "react-native-youtube-iframe";
 
 import ReviewQuestionCard from "../components/ReviewQuestionCard";
-import { useGetAttemptReviewQuery } from "../app/attemptApi";
+import {
+  useGetAttemptReviewQuery,
+  useStartAttemptMutation,
+} from "../app/attemptApi";
 
 const BG = "#FFFFFF";
 const TEXT_DARK = "#0F172A";
 const MUTED = "#94A3B8";
 const BLUE = "#2563EB";
-const BLUE_DARK = "#0B1220";
 
 function getYouTubeId(url = "") {
   try {
@@ -40,11 +52,24 @@ export default function ReviewPage({ navigation, route }) {
   const wrongFirst = Array.isArray(data?.wrongFirst) ? data.wrongFirst : [];
   const correctAfter = Array.isArray(data?.correctAfter) ? data.correctAfter : [];
 
-  const total = Number(result?.totalQuestions || wrongFirst.length + correctAfter.length || 0);
+  const total = Number(result?.totalQuestions || (wrongFirst.length + correctAfter.length) || 0);
   const correctCount = Number(result?.correctCount || correctAfter.length || 0);
-  const scorePercent = Number(result?.percentage || 0);
 
-  // reveal per card
+  const scorePercent = Number(
+    result?.percentage || (total ? Math.round((correctCount / total) * 100) : 0)
+  );
+
+  // ✅ attempt meta from backend
+  const paperId = String(data?.meta?.paperId || "");
+  const attemptsAllowed = Number(data?.meta?.attemptsAllowed || 1);
+  const attemptNo = Number(data?.meta?.attemptNo || 1);
+  const attemptsLeft = Number(data?.meta?.attemptsLeft ?? 0);
+  const nextAttemptNo = Number(data?.meta?.nextAttemptNo || attemptNo + 1);
+
+  const canRetry = !!paperId && attemptsLeft > 0;
+
+  const [startAttempt, { isLoading: starting }] = useStartAttemptMutation();
+
   const [expanded, setExpanded] = useState({});
   const [videoOpen, setVideoOpen] = useState(false);
   const [logicOpen, setLogicOpen] = useState(false);
@@ -67,7 +92,20 @@ export default function ReviewPage({ navigation, route }) {
 
   const videoId = useMemo(() => getYouTubeId(activeVideoUrl), [activeVideoUrl]);
 
+  const mergedList = useMemo(() => {
+    if (!correctAfter.length) return wrongFirst;
+    return [
+      ...wrongFirst,
+      { __type: "SECTION_CORRECT", _id: "__SECTION_CORRECT__" },
+      ...correctAfter,
+    ];
+  }, [wrongFirst, correctAfter]);
+
   const renderItem = ({ item, index }) => {
+    if (item?.__type === "SECTION_CORRECT") {
+      return <Text style={styles.sectionTitle}>Correct Answers (After)</Text>;
+    }
+
     const key = String(item?._id || index);
     const revealed = !!expanded[key];
 
@@ -82,8 +120,38 @@ export default function ReviewPage({ navigation, route }) {
     );
   };
 
-  const onRetry = () => navigation.navigate("DailyQuizMenu"); // adjust if you want go back to menu
   const onHome = () => navigation.navigate("Home");
+
+  const onRetry = () => {
+    if (!canRetry) return;
+
+    Alert.alert(
+      "Start next attempt?",
+      `Do you want to practice attempt ${nextAttemptNo}?\n\nAttempts: ${attemptNo}/${attemptsAllowed} completed`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Start",
+          onPress: async () => {
+            try {
+              const res = await startAttempt({ paperId }).unwrap();
+              const newAttemptId = String(res?.attempt?._id || "");
+              if (!newAttemptId) throw new Error("Attempt not created");
+
+              navigation.replace("PaperPage", {
+                attemptId: newAttemptId,
+                paperId,
+                title,
+                timeMin: Number(res?.paper?.timeMinutes || 10),
+              });
+            } catch (e) {
+              Alert.alert("Cannot start", e?.data?.message || e?.message || "Try again");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   if (isLoading || isFetching) {
     return (
@@ -105,8 +173,6 @@ export default function ReviewPage({ navigation, route }) {
     );
   }
 
-  const mergedList = [...wrongFirst, ...correctAfter];
-
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
@@ -119,21 +185,28 @@ export default function ReviewPage({ navigation, route }) {
               <Text style={styles.btnLightText}>Home</Text>
             </Pressable>
 
-            <Pressable onPress={onRetry} style={styles.btnBlue}>
-              <Text style={styles.btnBlueText}>Retry</Text>
-            </Pressable>
+            {/* ✅ only show retry if attempts left */}
+            {canRetry ? (
+              <Pressable onPress={onRetry} style={styles.btnBlue} disabled={starting}>
+                <Text style={styles.btnBlueText}>
+                  {starting ? "Starting..." : "Retry"}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
 
           <Text style={styles.scoreMeta}>
             {correctCount}/{total} correct • {title}
           </Text>
+
+          <Text style={styles.attemptMeta}>
+            Attempt {attemptNo}/{attemptsAllowed} • {Math.max(attemptsLeft, 0)} left
+          </Text>
         </View>
 
-        {wrongFirst.length > 0 && (
+        {wrongFirst.length > 0 ? (
           <Text style={styles.sectionTitle}>Wrong Answers (Review First)</Text>
-        )}
-
-        {wrongFirst.length === 0 && (
+        ) : (
           <Text style={styles.sectionTitle}>No wrong answers 🎉</Text>
         )}
 
@@ -143,13 +216,6 @@ export default function ReviewPage({ navigation, route }) {
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 120 }}
-          ListHeaderComponent={
-            correctAfter.length ? (
-              <View style={{ marginTop: 10 }}>
-                <Text style={styles.sectionTitle}>Correct Answers (After)</Text>
-              </View>
-            ) : null
-          }
         />
 
         {/* VIDEO MODAL */}
@@ -211,19 +277,73 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scoreText: { fontSize: 34, fontWeight: "900", color: BLUE },
-  scoreSub: { fontSize: 10, fontWeight: "800", color: MUTED, marginTop: 2, letterSpacing: 1 },
+  scoreSub: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: MUTED,
+    marginTop: 2,
+    letterSpacing: 1,
+  },
   scoreBtns: { flexDirection: "row", gap: 10, marginTop: 12 },
-  btnLight: { paddingHorizontal: 18, paddingVertical: 8, borderRadius: 999, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0" },
+  btnLight: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
   btnLightText: { fontWeight: "800", color: TEXT_DARK, fontSize: 12 },
-  btnBlue: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 999, backgroundColor: BLUE },
+  btnBlue: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: BLUE,
+  },
   btnBlueText: { fontWeight: "900", color: "#FFFFFF", fontSize: 12 },
-  scoreMeta: { marginTop: 10, fontSize: 12, color: MUTED, fontWeight: "700", textAlign: "center" },
+  scoreMeta: {
+    marginTop: 10,
+    fontSize: 12,
+    color: MUTED,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  attemptMeta: {
+    marginTop: 6,
+    fontSize: 11,
+    color: "#64748B",
+    fontWeight: "800",
+    textAlign: "center",
+  },
 
-  sectionTitle: { marginTop: 14, marginBottom: 8, color: MUTED, fontWeight: "800", fontSize: 12 },
+  sectionTitle: {
+    marginTop: 14,
+    marginBottom: 8,
+    color: MUTED,
+    fontWeight: "800",
+    fontSize: 12,
+  },
 
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", paddingHorizontal: 14 },
-  modalCard: { width: "100%", maxWidth: 520, backgroundColor: "#fff", borderRadius: 18, padding: 14 },
-  modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 520,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 14,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
   modalTitle: { fontWeight: "900", fontSize: 16, color: TEXT_DARK },
   modalBody: { color: TEXT_DARK, fontSize: 14, fontWeight: "700", lineHeight: 20 },
   videoBox: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 14, overflow: "hidden" },

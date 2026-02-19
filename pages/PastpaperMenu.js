@@ -1,31 +1,110 @@
 // pages/PastpaperMenu.js
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useGetPublishedPapersQuery } from "../app/paperApi";
+import { useStartAttemptMutation, useGetMyAttemptsByPaperQuery } from "../app/attemptApi";
 
 const PRIMARY = "#1153ec";
-const LIGHT_BLUE = "#EFF6FF";
-const LIGHT_BLUE_BORDER = "#BFDBFE";
-const LIGHT_BLUE_TEXT = "#1D4ED8";
+
+const Badge = ({ payment, amount }) => {
+  const type = String(payment || "free").toLowerCase();
+  const isPaid = type === "paid";
+  const bg = isPaid ? "#FEE2E2" : "#DCFCE7";
+  const text = isPaid ? "#991B1B" : "#166534";
+  const label = isPaid ? `PAID • Rs ${Number(amount || 0)}` : "FREE";
+  return (
+    <View style={[styles.badge, { backgroundColor: bg }]}>
+      <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
+    </View>
+  );
+};
+
+const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => {
+  const attemptsLeft = Number(context?.attemptsLeft ?? paper.attempts);
+  const isOver = attemptsLeft <= 0;
+  const btnText = isOver ? "View Result" : "Attempt Now";
+
+  const onPress = () => {
+    if (isOver) return onViewResult?.(paper, context);
+    return onAttemptNow?.(paper);
+  };
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{paper.title}</Text>
+
+      <View style={styles.metaRowCenter}>
+        <View style={styles.metaItem}>
+          <Ionicons name="help-circle-outline" size={16} color="#64748B" />
+          <Text style={styles.metaText}>{paper.mcqCount} MCQs</Text>
+        </View>
+
+        <View style={styles.metaItem}>
+          <Ionicons name="time-outline" size={16} color="#64748B" />
+          <Text style={styles.metaText}>{paper.timeMin} min</Text>
+        </View>
+
+        <View style={styles.metaItem}>
+          <Ionicons name="repeat-outline" size={16} color="#64748B" />
+          <Text style={styles.metaText}>{Math.max(attemptsLeft, 0)}/{paper.attempts} left</Text>
+        </View>
+      </View>
+
+      <View style={{ marginTop: 10, alignItems: "center" }}>
+        <Badge payment={paper.payment} amount={paper.amount} />
+      </View>
+
+      <View style={[styles.btn, isOver && styles.btnLight, starting && { opacity: 0.6 }]} onTouchEnd={onPress}>
+        <Text style={[styles.btnText, isOver && styles.btnTextDark]}>
+          {starting ? "Please wait..." : btnText}
+        </Text>
+        <Ionicons
+          name={isOver ? "document-text-outline" : "arrow-forward"}
+          size={18}
+          color={isOver ? "#0F172A" : "#FFFFFF"}
+        />
+      </View>
+    </View>
+  );
+};
+
+const PaperCardWithAttempts = ({ paper, onAttemptNow, onViewResult, starting }) => {
+  const { data: context, isFetching } = useGetMyAttemptsByPaperQuery(
+    { paperId: paper.id },
+    { skip: !paper?.id }
+  );
+  const safeContext = isFetching ? null : context;
+
+  return (
+    <PaperCard
+      paper={paper}
+      context={safeContext}
+      onAttemptNow={onAttemptNow}
+      onViewResult={onViewResult}
+      starting={starting}
+    />
+  );
+};
 
 export default function PastpaperMenu({ route }) {
   const navigation = useNavigation();
 
-  const { gradeNumber, level, stream, subject, mode = "past" } = route?.params || {};
-  const canFetch = !!gradeNumber && !!subject && (gradeNumber < 12 || !!stream);
+  const { gradeNumber, stream, subject } = route?.params || {};
+  const canFetch = !!gradeNumber && !!subject && (Number(gradeNumber) < 12 || !!stream);
 
-  const { data: papersRaw = [], isLoading, isFetching, error } = useGetPublishedPapersQuery(
-    {
-      gradeNumber,
-      paperType: "Past paper",
-      stream: gradeNumber >= 12 ? stream : null,
-      subject,
-    },
-    { skip: !canFetch }
-  );
+  const { data: papersRaw = [], isLoading, isFetching, error } =
+    useGetPublishedPapersQuery(
+      {
+        gradeNumber,
+        paperType: "Past paper",
+        stream: Number(gradeNumber) >= 12 ? stream : null,
+        subject,
+      },
+      { skip: !canFetch }
+    );
 
   const PAPERS = useMemo(() => {
     return (Array.isArray(papersRaw) ? papersRaw : []).map((p) => ({
@@ -39,22 +118,34 @@ export default function PastpaperMenu({ route }) {
     }));
   }, [papersRaw]);
 
-  const onAttempt = (paper, attemptNo) => {
-    navigation.navigate("DailyQuizPaper", {
-      mode,
-      gradeNumber,
-      level,
-      stream: gradeNumber >= 12 ? stream : null,
-      subject,
-      paperId: paper.id,
-      title: paper.title,
-      mcqCount: paper.mcqCount,
-      timeMin: paper.timeMin,
-      attemptNo,
-    });
+  const [startAttempt, { isLoading: starting }] = useStartAttemptMutation();
+
+  const onAttemptNow = async (paper) => {
+    try {
+      const res = await startAttempt({ paperId: paper.id }).unwrap();
+      const attemptId = String(res?.attempt?._id || "");
+      if (!attemptId) throw new Error("Attempt not created");
+
+      navigation.navigate("PaperPage", {
+        attemptId,
+        paperId: paper.id,
+        title: paper.title,
+        timeMin: Number(res?.paper?.timeMinutes || paper.timeMin || 10),
+      });
+    } catch (e) {
+      console.log("startAttempt error:", e);
+      Alert.alert("Cannot start", e?.data?.message || e?.message || "Try again");
+    }
   };
 
-  const onAttemptNow = (paper) => onAttempt(paper, 1);
+  const onViewResult = (paper, context) => {
+    const attemptId = String(context?.lastAttemptId || "");
+    if (!attemptId) {
+      Alert.alert("No result", "No submitted attempt found for this paper.");
+      return;
+    }
+    navigation.navigate("ReviewPage", { attemptId, title: paper.title });
+  };
 
   return (
     <View style={styles.screen}>
@@ -85,41 +176,13 @@ export default function PastpaperMenu({ route }) {
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {PAPERS.map((p) => (
-            <View key={p.id} style={styles.card}>
-              <Text style={styles.cardTitle}>{p.title}</Text>
-
-              <View style={styles.metaRowCenter}>
-                <View style={styles.metaItem}>
-                  <Ionicons name="help-circle-outline" size={16} color="#64748B" />
-                  <Text style={styles.metaText}>{p.mcqCount} MCQs</Text>
-                </View>
-
-                <View style={styles.metaItem}>
-                  <Ionicons name="time-outline" size={16} color="#64748B" />
-                  <Text style={styles.metaText}>{p.timeMin} min</Text>
-                </View>
-              </View>
-
-              <View style={styles.attemptRow}>
-                {[1, 2, 3].filter((a) => a <= (p.attempts || 1)).map((a) => (
-                  <Pressable
-                    key={a}
-                    onPress={() => onAttempt(p, a)}
-                    style={({ pressed }) => [styles.attemptPill, pressed && styles.pillPressed]}
-                  >
-                    <Text style={styles.attemptText}>Attempt {a}</Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              <Pressable
-                onPress={() => onAttemptNow(p)}
-                style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}
-              >
-                <Text style={styles.btnText}>Attempt Now</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-              </Pressable>
-            </View>
+            <PaperCardWithAttempts
+              key={p.id}
+              paper={p}
+              onAttemptNow={onAttemptNow}
+              onViewResult={onViewResult}
+              starting={starting}
+            />
           ))}
         </ScrollView>
       )}
@@ -132,6 +195,10 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: 22, fontWeight: "900", color: PRIMARY, textAlign: "center" },
   pageSub: { marginTop: 6, marginBottom: 14, fontSize: 12, fontWeight: "700", color: "#64748B", textAlign: "center" },
   list: { paddingBottom: 24, gap: 12 },
+
+  badge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  badgeText: { fontWeight: "900", fontSize: 11 },
+
   card: { backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", elevation: 3 },
   cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A", textAlign: "center" },
 
@@ -139,14 +206,10 @@ const styles = StyleSheet.create({
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   metaText: { fontSize: 11, fontWeight: "800", color: "#475569" },
 
-  attemptRow: { marginTop: 12, flexDirection: "row", justifyContent: "center", gap: 10, flexWrap: "wrap" },
-  attemptPill: { backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999 },
-  pillPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  attemptText: { color: "#1D4ED8", fontSize: 12, fontWeight: "900" },
-
   btn: { marginTop: 12, height: 44, borderRadius: 14, backgroundColor: PRIMARY, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 },
-  btnPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
+  btnLight: { backgroundColor: "#EEF2FF", borderWidth: 1, borderColor: "#C7D2FE" },
   btnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
+  btnTextDark: { color: "#0F172A" },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
   infoText: { fontSize: 14, fontWeight: "900", color: "#0F172A", textAlign: "center" },

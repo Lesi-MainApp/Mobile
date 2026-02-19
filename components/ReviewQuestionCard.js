@@ -1,3 +1,4 @@
+// components/ReviewQuestionCard.js
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,7 +21,14 @@ export default function ReviewQuestionCard({
 }) {
   const isCorrect = !!item?.isCorrect;
 
-  const correctAnswer = item?.correctAnswer || "";
+  // ✅ support multi correct
+  const correctAnswers =
+    Array.isArray(item?.correctAnswers) && item.correctAnswers.length
+      ? item.correctAnswers
+      : item?.correctAnswer
+      ? [item.correctAnswer]
+      : [];
+
   const userAnswer = item?.selectedAnswer || "";
 
   return (
@@ -48,11 +56,28 @@ export default function ReviewQuestionCard({
       {revealed && (
         <View style={styles.revealBox}>
           <Text style={styles.line}>
-            Your Answer: <Text style={[styles.bold, !isCorrect && { color: RED }]}>{userAnswer || "-"}</Text>
+            Your Answer:{" "}
+            <Text style={[styles.bold, !isCorrect && { color: RED }]}>
+              {userAnswer || "-"}
+            </Text>
           </Text>
-          <Text style={styles.line}>
-            Correct Answer: <Text style={[styles.bold, { color: GREEN }]}>{correctAnswer || "-"}</Text>
-          </Text>
+
+          {/* ✅ multi correct answers display */}
+          {correctAnswers.length <= 1 ? (
+            <Text style={styles.line}>
+              Correct Answer:{" "}
+              <Text style={[styles.bold, { color: GREEN }]}>
+                {correctAnswers[0] || "-"}
+              </Text>
+            </Text>
+          ) : (
+            <Text style={styles.line}>
+              Correct Answers:{" "}
+              <Text style={[styles.bold, { color: GREEN }]}>
+                {correctAnswers.join(", ")}
+              </Text>
+            </Text>
+          )}
 
           <View style={styles.actions}>
             <Pressable onPress={onExplainLogic} style={styles.btnDark}>
@@ -81,7 +106,14 @@ const styles = StyleSheet.create({
   headRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   qNo: { fontSize: 12, fontWeight: "900", color: MUTED },
 
-  badge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
   badgeGreen: { backgroundColor: GREEN },
   badgeRed: { backgroundColor: RED },
   badgeText: { color: "#fff", fontWeight: "900", fontSize: 11 },
@@ -102,7 +134,14 @@ const styles = StyleSheet.create({
   },
   revealText: { fontWeight: "900", color: DARK, fontSize: 12 },
 
-  revealBox: { marginTop: 12, backgroundColor: "#F8FAFC", borderRadius: 14, padding: 12, borderWidth: 1, borderColor: BORDER },
+  revealBox: {
+    marginTop: 12,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
   line: { fontSize: 12, fontWeight: "700", color: TEXT_DARK, marginTop: 6 },
   bold: { fontWeight: "900" },
 

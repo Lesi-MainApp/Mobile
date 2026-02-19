@@ -1,3 +1,4 @@
+// pages/Modelpaper.js
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
@@ -57,10 +58,7 @@ export default function ModelPaper() {
         <Text style={styles.helperText}>
           Please select your grade (and stream for A/L) first.
         </Text>
-        <Pressable
-          style={styles.primaryBtn}
-          onPress={() => navigation.navigate("MainSelectgrade")}
-        >
+        <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate("MainSelectgrade")}>
           <Text style={styles.primaryBtnText}>Go to Grade Selection</Text>
         </Pressable>
       </View>
@@ -140,9 +138,7 @@ export default function ModelPaper() {
           <Text style={styles.startBtnText}>Continue</Text>
         </Pressable>
 
-        {!canStart && (
-          <Text style={styles.helperText}>Please select a subject.</Text>
-        )}
+        {!canStart && <Text style={styles.helperText}>Please select a subject.</Text>}
       </View>
     </View>
   );

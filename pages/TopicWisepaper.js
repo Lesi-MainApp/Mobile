@@ -1,12 +1,6 @@
 // pages/TopicWisePaper.js
 import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 
@@ -20,9 +14,8 @@ export default function TopicWisePaper() {
   const { user } = useUser();
   const [selectedSubject, setSelectedSubject] = useState("");
 
-  // ✅ get grade/level/stream from backend user fields
-  const level = user?.selectedLevel || null; // "primary" | "ol" | "al"
-  const gradeNumber = Number(user?.selectedGradeNumber || 0) || null; // 1..13
+  const level = user?.selectedLevel || null;
+  const gradeNumber = Number(user?.selectedGradeNumber || 0) || null;
   const stream = user?.selectedStream || null;
 
   const isAL = level === "al" || gradeNumber === 12 || gradeNumber === 13;
@@ -33,19 +26,14 @@ export default function TopicWisePaper() {
   const subjectsToShow = useMemo(() => {
     if (!gradeDoc) return [];
 
-    // grades 1..11
     if (!isAL) {
       const list = Array.isArray(gradeDoc?.subjects) ? gradeDoc.subjects : [];
       return list.map((x) => x?.subject).filter(Boolean);
     }
 
-    // grades 12/13 => stream subjects
     const streams = Array.isArray(gradeDoc?.streams) ? gradeDoc.streams : [];
     const streamObj = streams.find((s) => norm(s?.stream) === norm(stream));
-    const streamSubjects = Array.isArray(streamObj?.subjects)
-      ? streamObj.subjects
-      : [];
-
+    const streamSubjects = Array.isArray(streamObj?.subjects) ? streamObj.subjects : [];
     return streamSubjects.map((x) => x?.subject).filter(Boolean);
   }, [gradeDoc, isAL, stream]);
 
@@ -63,32 +51,24 @@ export default function TopicWisePaper() {
     });
   };
 
-  // ✅ grade not selected
   if (!gradeNumber) {
     return (
       <View style={styles.center}>
         <Text style={styles.title}>Grade not selected</Text>
         <Text style={styles.helperText}>Please select your grade first.</Text>
-        <Pressable
-          style={styles.primaryBtn}
-          onPress={() => navigation.navigate("MainSelectgrade")}
-        >
+        <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate("MainSelectgrade")}>
           <Text style={styles.primaryBtnText}>Go to Grade Selection</Text>
         </Pressable>
       </View>
     );
   }
 
-  // ✅ AL stream not selected
   if (isAL && !stream) {
     return (
       <View style={styles.center}>
         <Text style={styles.title}>Stream not selected</Text>
         <Text style={styles.helperText}>Please select your stream first.</Text>
-        <Pressable
-          style={styles.primaryBtn}
-          onPress={() => navigation.navigate("MainSelectgrade")}
-        >
+        <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate("MainSelectgrade")}>
           <Text style={styles.primaryBtnText}>Go to Grade Selection</Text>
         </Pressable>
       </View>
@@ -167,36 +147,15 @@ export default function TopicWisePaper() {
           <Text style={styles.startBtnText}>Continue</Text>
         </Pressable>
 
-        {!canStart && (
-          <Text style={styles.helperText}>Please select a subject.</Text>
-        )}
+        {!canStart && <Text style={styles.helperText}>Please select a subject.</Text>}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
+  screen: { flex: 1, backgroundColor: "#F8FAFC", alignItems: "center", justifyContent: "center", padding: 16 },
+  card: { width: "100%", maxWidth: 420, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 },
   title: { fontSize: 20, fontWeight: "900", color: "#0F172A", textAlign: "center" },
   subTitle: { fontSize: 13, color: "#334155", textAlign: "center", marginTop: 6, marginBottom: 14 },
   infoRow: { fontSize: 12, fontWeight: "700", color: "#334155", textAlign: "center", marginTop: 4 },

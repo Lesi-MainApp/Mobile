@@ -41,6 +41,7 @@ import DailyQuizMenu from "./pages/DailyQuizzMenu";
 import TopicWiseMenu from "./pages/TopicWisemenu";
 import ModelPaperMenu from "./pages/ModelPaperMenu";
 import PastpaperMenu from "./pages/PastpaperMenu";
+
 import ReviewPage from "./pages/ReviewPage";
 import PaperPage from "./pages/paper";
 
@@ -80,6 +81,12 @@ const TopicWiseMenuWithLayout = withSecondLayout(TopicWiseMenu);
 const ModelPaperMenuWithLayout = withSecondLayout(ModelPaperMenu);
 const PastpaperMenuWithLayout = withSecondLayout(PastpaperMenu);
 
+// ✅ NEW: ReviewPage inside SecondLayout
+const ReviewPageWithLayout = withSecondLayout(ReviewPage);
+
+// (Optional) If you also want quiz paper screen inside layout, use this:
+// const PaperPageWithLayout = withSecondLayout(PaperPage);
+
 export default function App() {
   const [fontsReady, setFontsReady] = useState(false);
 
@@ -114,7 +121,10 @@ export default function App() {
       <NavigationContainer>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <RootLayout>
-          <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+          <Stack.Navigator
+            screenOptions={{ headerShown: false }}
+            initialRouteName="Splash"
+          >
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="LanguageSelect" component={LanguageSelect} />
             <Stack.Screen name="Sign" component={Sign} />
@@ -129,24 +139,52 @@ export default function App() {
             <Stack.Screen name="Profile" component={ProfileWithLayout} />
 
             <Stack.Screen name="Subjects" component={SubjectsWithLayout} />
-            <Stack.Screen name="SubjectWithTeachers" component={SubjectWithTeachersWithLayout} />
+            <Stack.Screen
+              name="SubjectWithTeachers"
+              component={SubjectWithTeachersWithLayout}
+            />
             <Stack.Screen name="IndexNumber" component={IndexNumberWithLayout} />
             <Stack.Screen name="Lessons" component={LessonsWithLayout} />
             <Stack.Screen name="ViewLesson" component={ViewLessonWithLayout} />
-            <Stack.Screen name="EnrollSubjects" component={EnrollSubjectsWithLayout} />
+            <Stack.Screen
+              name="EnrollSubjects"
+              component={EnrollSubjectsWithLayout}
+            />
 
             <Stack.Screen name="DailyQuiz" component={DailyQuizWithLayout} />
-            <Stack.Screen name="TopicWisePaper" component={TopicWisePaperWithLayout} />
+            <Stack.Screen
+              name="TopicWisePaper"
+              component={TopicWisePaperWithLayout}
+            />
             <Stack.Screen name="ModelPaper" component={ModelPaperWithLayout} />
             <Stack.Screen name="PastPapers" component={PastPapersWithLayout} />
 
-            <Stack.Screen name="DailyQuizMenu" component={DailyQuizMenuWithLayout} />
-            <Stack.Screen name="TopicWiseMenu" component={TopicWiseMenuWithLayout} />
-            <Stack.Screen name="ModelPaperMenu" component={ModelPaperMenuWithLayout} />
-            <Stack.Screen name="PastpaperMenu" component={PastpaperMenuWithLayout} />
+            <Stack.Screen
+              name="DailyQuizMenu"
+              component={DailyQuizMenuWithLayout}
+            />
+            <Stack.Screen
+              name="TopicWiseMenu"
+              component={TopicWiseMenuWithLayout}
+            />
+            <Stack.Screen
+              name="ModelPaperMenu"
+              component={ModelPaperMenuWithLayout}
+            />
+            <Stack.Screen
+              name="PastpaperMenu"
+              component={PastpaperMenuWithLayout}
+            />
 
-            <Stack.Screen name="ReviewPage" component={ReviewPage} />
+            {/* ✅ ReviewPage now uses SecondLayout */}
+            <Stack.Screen name="ReviewPage" component={ReviewPageWithLayout} />
+
+            {/* keep PaperPage same (no layout) */}
             <Stack.Screen name="PaperPage" component={PaperPage} />
+
+            {/* If you decide PaperPage should ALSO use layout, swap above line with:
+                <Stack.Screen name="PaperPage" component={PaperPageWithLayout} />
+            */}
           </Stack.Navigator>
         </RootLayout>
       </NavigationContainer>

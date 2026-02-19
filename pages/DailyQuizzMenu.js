@@ -1,31 +1,117 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useGetPublishedPapersQuery } from "../app/paperApi";
-import { useStartAttemptMutation } from "../app/attemptApi";
+import {
+  useStartAttemptMutation,
+  useGetMyAttemptsByPaperQuery,
+} from "../app/attemptApi";
 
 const PRIMARY = "#1153ec";
-const LIGHT_BLUE = "#EFF6FF";
-const LIGHT_BLUE_BORDER = "#BFDBFE";
-const LIGHT_BLUE_TEXT = "#1D4ED8";
+
+const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => {
+  const attemptsLeft = Number(context?.attemptsLeft ?? paper.attempts);
+  const isOver = attemptsLeft <= 0;
+
+  const btnText = isOver ? "View Result" : "Attempt Now";
+
+  const onPress = () => {
+    if (isOver) return onViewResult?.(paper, context);
+    return onAttemptNow?.(paper);
+  };
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{paper.title}</Text>
+
+      <View style={styles.metaRowCenter}>
+        <View style={styles.metaItem}>
+          <Ionicons name="help-circle-outline" size={16} color="#64748B" />
+          <Text style={styles.metaText}>{paper.mcqCount} MCQs</Text>
+        </View>
+
+        <View style={styles.metaItem}>
+          <Ionicons name="time-outline" size={16} color="#64748B" />
+          <Text style={styles.metaText}>{paper.timeMin} min</Text>
+        </View>
+
+        <View style={styles.metaItem}>
+          <Ionicons name="repeat-outline" size={16} color="#64748B" />
+          <Text style={styles.metaText}>
+            {Math.max(attemptsLeft, 0)}/{paper.attempts} left
+          </Text>
+        </View>
+      </View>
+
+      <Pressable
+        onPress={onPress}
+        disabled={starting}
+        style={({ pressed }) => [
+          styles.btn,
+          pressed && styles.btnPressed,
+          starting && { opacity: 0.6 },
+          isOver && styles.btnLight,
+        ]}
+      >
+        <Text style={[styles.btnText, isOver && styles.btnTextDark]}>
+          {starting ? "Please wait..." : btnText}
+        </Text>
+        <Ionicons
+          name={isOver ? "document-text-outline" : "arrow-forward"}
+          size={18}
+          color={isOver ? "#0F172A" : "#FFFFFF"}
+        />
+      </Pressable>
+    </View>
+  );
+};
+
+const PaperCardWithAttempts = ({ paper, onAttemptNow, onViewResult, starting }) => {
+  const { data: context, isFetching } = useGetMyAttemptsByPaperQuery(
+    { paperId: paper.id },
+    { skip: !paper?.id }
+  );
+
+  // while fetching, still show Attempt Now (safe)
+  const safeContext = isFetching ? null : context;
+
+  return (
+    <PaperCard
+      paper={paper}
+      context={safeContext}
+      onAttemptNow={onAttemptNow}
+      onViewResult={onViewResult}
+      starting={starting}
+    />
+  );
+};
 
 export default function DailyQuizMenu({ route }) {
   const navigation = useNavigation();
-  const { gradeNumber, level, stream, subject, mode = "daily" } = route?.params || {};
+  const { gradeNumber, stream, subject } = route?.params || {};
 
   const canFetch = !!gradeNumber && !!subject && (gradeNumber < 12 || !!stream);
 
-  const { data: papersRaw = [], isLoading, isFetching, error } = useGetPublishedPapersQuery(
-    {
-      gradeNumber,
-      paperType: "Daily Quiz",
-      stream: gradeNumber >= 12 ? stream : null,
-      subject,
-    },
-    { skip: !canFetch }
-  );
+  const { data: papersRaw = [], isLoading, isFetching, error } =
+    useGetPublishedPapersQuery(
+      {
+        gradeNumber,
+        paperType: "Daily Quiz",
+        stream: gradeNumber >= 12 ? stream : null,
+        subject,
+      },
+      { skip: !canFetch }
+    );
 
   const PAPERS = useMemo(() => {
     return (Array.isArray(papersRaw) ? papersRaw : []).map((p) => ({
@@ -39,13 +125,11 @@ export default function DailyQuizMenu({ route }) {
     }));
   }, [papersRaw]);
 
-  // ✅ NEW
   const [startAttempt, { isLoading: starting }] = useStartAttemptMutation();
 
   const onAttemptNow = async (paper) => {
     try {
       const res = await startAttempt({ paperId: paper.id }).unwrap();
-
       const attemptId = String(res?.attempt?._id || "");
       if (!attemptId) throw new Error("Attempt not created");
 
@@ -59,6 +143,19 @@ export default function DailyQuizMenu({ route }) {
       console.log("startAttempt error:", e);
       Alert.alert("Cannot start", e?.data?.message || e?.message || "Try again");
     }
+  };
+
+  const onViewResult = (paper, context) => {
+    const attemptId = String(context?.lastAttemptId || "");
+    if (!attemptId) {
+      Alert.alert("No result", "No submitted attempt found for this paper.");
+      return;
+    }
+
+    navigation.navigate("ReviewPage", {
+      attemptId,
+      title: paper.title,
+    });
   };
 
   return (
@@ -90,30 +187,13 @@ export default function DailyQuizMenu({ route }) {
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {PAPERS.map((p) => (
-            <View key={p.id} style={styles.card}>
-              <Text style={styles.cardTitle}>{p.title}</Text>
-
-              <View style={styles.metaRowCenter}>
-                <View style={styles.metaItem}>
-                  <Ionicons name="help-circle-outline" size={16} color="#64748B" />
-                  <Text style={styles.metaText}>{p.mcqCount} MCQs</Text>
-                </View>
-
-                <View style={styles.metaItem}>
-                  <Ionicons name="time-outline" size={16} color="#64748B" />
-                  <Text style={styles.metaText}>{p.timeMin} min</Text>
-                </View>
-              </View>
-
-              <Pressable
-                onPress={() => onAttemptNow(p)}
-                disabled={starting}
-                style={({ pressed }) => [styles.btn, pressed && styles.btnPressed, starting && { opacity: 0.6 }]}
-              >
-                <Text style={styles.btnText}>{starting ? "Starting..." : "Attempt Now"}</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-              </Pressable>
-            </View>
+            <PaperCardWithAttempts
+              key={p.id}
+              paper={p}
+              onAttemptNow={onAttemptNow}
+              onViewResult={onViewResult}
+              starting={starting}
+            />
           ))}
         </ScrollView>
       )}
@@ -124,16 +204,61 @@ export default function DailyQuizMenu({ route }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F8FAFC", padding: 16, paddingTop: 18 },
   pageTitle: { fontSize: 22, fontWeight: "900", color: PRIMARY, textAlign: "center" },
-  pageSub: { marginTop: 6, marginBottom: 14, fontSize: 12, fontWeight: "700", color: "#64748B", textAlign: "center" },
+  pageSub: {
+    marginTop: 6,
+    marginBottom: 14,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#64748B",
+    textAlign: "center",
+  },
   list: { paddingBottom: 24, gap: 12 },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", elevation: 3 },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    elevation: 3,
+  },
   cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A", textAlign: "center" },
-  metaRowCenter: { marginTop: 10, flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: 10 },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+
+  metaRowCenter: {
+    marginTop: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
   metaText: { fontSize: 11, fontWeight: "800", color: "#475569" },
-  btn: { marginTop: 12, height: 44, borderRadius: 14, backgroundColor: PRIMARY, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 },
+
+  btn: {
+    marginTop: 12,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: PRIMARY,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  btnLight: { backgroundColor: "#EEF2FF", borderWidth: 1, borderColor: "#C7D2FE" },
   btnPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   btnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
+  btnTextDark: { color: "#0F172A" },
+
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
   infoText: { fontSize: 14, fontWeight: "900", color: "#0F172A", textAlign: "center" },
   infoTextSmall: { marginTop: 8, fontSize: 12, fontWeight: "700", color: "#64748B", textAlign: "center" },

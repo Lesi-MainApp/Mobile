@@ -44,6 +44,22 @@ export const attemptApi = createApi({
       }),
     }),
 
+    // ✅ NEW: paper attempts status for current student
+    getMyAttemptsByPaper: builder.query({
+      query: ({ paperId }) => ({
+        url: `/my/${paperId}`,
+        method: "GET",
+      }),
+    }),
+
+    // ✅ NEW: summary (for retry info)
+    getAttemptSummary: builder.query({
+      query: ({ attemptId }) => ({
+        url: `/summary/${attemptId}`,
+        method: "GET",
+      }),
+    }),
+
     getAttemptReview: builder.query({
       query: ({ attemptId }) => ({
         url: `/review/${attemptId}`,
@@ -59,4 +75,8 @@ export const {
   useSaveAnswerMutation,
   useSubmitAttemptMutation,
   useGetAttemptReviewQuery,
+
+  // ✅ new hooks
+  useGetMyAttemptsByPaperQuery,
+  useGetAttemptSummaryQuery,
 } = attemptApi;

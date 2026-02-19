@@ -42,16 +42,15 @@ export default function PaperPage({ navigation, route }) {
   const [saveAnswer] = useSaveAnswerMutation();
   const [submitAttempt] = useSubmitAttemptMutation();
 
-  const questions = useMemo(() => Array.isArray(data?.questions) ? data.questions : [], [data]);
+  const questions = useMemo(() => (Array.isArray(data?.questions) ? data.questions : []), [data]);
   const timeMin = Number(data?.paper?.timeMinutes || fallbackTimeMin || 10);
 
   const total = questions.length;
 
   const [qIndex, setQIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // { [qIndex]: selectedAnswerIndex }
+  const [answers, setAnswers] = useState({});
   const [secondsLeft, setSecondsLeft] = useState(timeMin * 60);
 
-  // load saved answers when questions load
   useEffect(() => {
     if (!questions.length) return;
     const map = {};
@@ -62,12 +61,10 @@ export default function PaperPage({ navigation, route }) {
     setQIndex(0);
   }, [questions]);
 
-  // reset timer when timeMin loads
   useEffect(() => {
     setSecondsLeft(timeMin * 60);
   }, [timeMin]);
 
-  // timer tick
   useEffect(() => {
     if (!attemptId) return;
 
@@ -85,7 +82,6 @@ export default function PaperPage({ navigation, route }) {
     };
   }, [attemptId]);
 
-  // auto finish
   useEffect(() => {
     if (secondsLeft === 0) onFinish(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,7 +99,6 @@ export default function PaperPage({ navigation, route }) {
   const onSelect = async (optIndex) => {
     try {
       setAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
-
       if (!current?._id) return;
 
       await saveAnswer({
@@ -197,8 +192,8 @@ export default function PaperPage({ navigation, route }) {
             total={total}
             question={{
               id: current._id,
-              text: current.question,
-              options: current.answers,
+              question: current.question,
+              answers: current.answers,
               lessonName: current.lessonName,
               imageUrl: current.imageUrl,
             }}
@@ -215,15 +210,16 @@ export default function PaperPage({ navigation, route }) {
           </Text>
         </Pressable>
 
-        <Pressable
-          onPress={goNext}
-          disabled={!canNext}
-          style={[styles.nextBtn, !canNext && styles.nextDisabled]}
-        >
-          <Text style={styles.nextText}>
-            {canNext ? "Next Question" : "Last Question"}
-          </Text>
-        </Pressable>
+        {/* ✅ FIX: last question shows SUBMIT instead of disabled button */}
+        {canNext ? (
+          <Pressable onPress={goNext} style={styles.nextBtn}>
+            <Text style={styles.nextText}>Next Question</Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={() => onFinish(false)} style={styles.nextBtn}>
+            <Text style={styles.nextText}>Submit</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -265,7 +261,6 @@ const styles = StyleSheet.create({
     minWidth: 150,
   },
   nextText: { color: NEXT_TEXT, fontWeight: "900", fontSize: 13 },
-  nextDisabled: { opacity: 0.6 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
   helper: { marginTop: 10, textAlign: "center", color: "#64748B", fontSize: 12, fontWeight: "600" },
   retryBtn: { marginTop: 12, backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
