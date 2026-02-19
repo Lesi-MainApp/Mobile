@@ -22,7 +22,6 @@ export default function LanguageSelect({ navigation }) {
   };
 
   const onContinue = () => {
-    // ✅ no async storage, no backend required here
     navigation.replace("Sign");
   };
 

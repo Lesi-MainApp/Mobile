@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+
 import PaperComponent from "../components/PaperComponent";
+import { useGetAttemptQuestionsQuery, useSaveAnswerMutation, useSubmitAttemptMutation } from "../app/attemptApi";
 
 const BG = "#FFFFFF";
 const TEXT_DARK = "#0F172A";
@@ -12,8 +14,6 @@ const TIMER_TEXT = "#E11D48";
 
 const NEXT_BG = "#0B1220";
 const NEXT_TEXT = "#FFFFFF";
-
-// ✅ Bottom bar background
 const BOTTOM_BAR_BG = "#94A3B8";
 
 function formatTime(seconds) {
@@ -26,44 +26,53 @@ function formatTime(seconds) {
 }
 
 export default function PaperPage({ navigation, route }) {
-  const paperId = route?.params?.paperId || "paper1";
-  const title = route?.params?.title || "Daily Quiz Paper";
-  const timeMin = Number(route?.params?.timeMin || 10);
-  const attemptNo = Number(route?.params?.attemptNo || 1);
+  const attemptId = route?.params?.attemptId || "";
+  const paperId = route?.params?.paperId || "";
+  const title = route?.params?.title || "Daily Quiz";
+  const fallbackTimeMin = Number(route?.params?.timeMin || 10);
 
+  const finishedRef = useRef(false);
   const intervalRef = useRef(null);
-  const finishedRef = useRef(false); // ✅ prevent double finish
 
-  // ✅ Your questions (replace with backend data later)
-  const questions = useMemo(
-    () => [
-      {
-        id: "q1",
-        text: "Which part of the cell is known as the powerhouse?",
-        options: ["Nucleus", "Ribosome", "Mitochondria", "Vacuole"],
-        correctIndex: 2,
-        explanationVideoUrl: "",
-      },
-      {
-        id: "q2",
-        text: "2 + 5 = ?",
-        options: ["5", "6", "7", "8"],
-        correctIndex: 2,
-        explanationVideoUrl: "",
-      },
-    ],
-    []
+  const { data, isLoading, isFetching, error, refetch } = useGetAttemptQuestionsQuery(
+    { attemptId },
+    { skip: !attemptId }
   );
+
+  const [saveAnswer] = useSaveAnswerMutation();
+  const [submitAttempt] = useSubmitAttemptMutation();
+
+  const questions = useMemo(() => Array.isArray(data?.questions) ? data.questions : [], [data]);
+  const timeMin = Number(data?.paper?.timeMinutes || fallbackTimeMin || 10);
 
   const total = questions.length;
 
-  // answers: { [index]: optionIndex }
-  const [answers, setAnswers] = useState({});
   const [qIndex, setQIndex] = useState(0);
+  const [answers, setAnswers] = useState({}); // { [qIndex]: selectedAnswerIndex }
   const [secondsLeft, setSecondsLeft] = useState(timeMin * 60);
 
-  // ✅ timer
+  // load saved answers when questions load
   useEffect(() => {
+    if (!questions.length) return;
+    const map = {};
+    questions.forEach((q, i) => {
+      if (typeof q?.selectedAnswerIndex === "number") map[i] = q.selectedAnswerIndex;
+    });
+    setAnswers(map);
+    setQIndex(0);
+  }, [questions]);
+
+  // reset timer when timeMin loads
+  useEffect(() => {
+    setSecondsLeft(timeMin * 60);
+  }, [timeMin]);
+
+  // timer tick
+  useEffect(() => {
+    if (!attemptId) return;
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
     intervalRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) return 0;
@@ -74,22 +83,16 @@ export default function PaperPage({ navigation, route }) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [attemptId]);
 
-  // ✅ Auto-finish when time is 0
+  // auto finish
   useEffect(() => {
-    if (secondsLeft === 0) {
-      onFinish(true);
-    }
+    if (secondsLeft === 0) onFinish(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft]);
 
   const current = questions[qIndex];
   const selectedOption = answers[qIndex];
-
-  const onSelect = (optIndex) => {
-    setAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
-  };
 
   const canNext = qIndex < total - 1;
   const canPrev = qIndex > 0;
@@ -97,65 +100,73 @@ export default function PaperPage({ navigation, route }) {
   const goNext = () => canNext && setQIndex((p) => p + 1);
   const goPrev = () => canPrev && setQIndex((p) => p - 1);
 
-  const calculateScore = () => {
-    let score = 0;
-    for (let i = 0; i < total; i++) {
-      if (answers[i] === questions[i].correctIndex) score += 1;
+  const onSelect = async (optIndex) => {
+    try {
+      setAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
+
+      if (!current?._id) return;
+
+      await saveAnswer({
+        attemptId,
+        questionId: current._id,
+        selectedAnswerIndex: optIndex,
+      }).unwrap();
+    } catch (e) {
+      console.log("saveAnswer error:", e);
+      Alert.alert("Error", e?.data?.message || "Failed to save answer");
     }
-    return score;
   };
 
-  // ✅ Build review items for ReviewPage
-  const buildReviewItems = () => {
-    return questions.map((q, i) => {
-      const userIndex = typeof answers[i] === "number" ? answers[i] : null;
-      const correctIndex = q.correctIndex;
-
-      const userAnswer =
-        userIndex === null || userIndex === undefined
-          ? ""
-          : q.options?.[userIndex] ?? "";
-
-      const correctAnswer = q.options?.[correctIndex] ?? "";
-
-      return {
-        _id: q.id || String(i),
-        question: q.text || "",
-        answers: q.options || [],
-        correctAnswerIndex: correctIndex,
-        userAnswerIndex: userIndex,
-        userAnswer,
-        correctAnswer,
-        isCorrect: userIndex === correctIndex,
-        explanationVideoUrl: q.explanationVideoUrl || "",
-      };
-    });
-  };
-
-  const onFinish = (autoFinish = false) => {
-    if (finishedRef.current) return; // ✅ block double call
+  const onFinish = async (autoFinish = false) => {
+    if (finishedRef.current) return;
     finishedRef.current = true;
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    const score = calculateScore();
-    const scorePercent = total > 0 ? Math.round((score / total) * 100) : 0;
+    try {
+      const res = await submitAttempt({ attemptId }).unwrap();
 
-    // ✅ go to your new ReviewPage (same UI like screenshot)
-    navigation.replace("ReviewPage", {
-      paperId,
-      title,
-      attemptNo,
-      total,
-      score,
-      scorePercent,
-      autoFinish,
-      items: buildReviewItems(),
-    });
-
-    // If you still want Result page sometimes, use:
-    // navigation.navigate("Result", { paperId, title, attemptNo, total, score, autoFinish });
+      navigation.replace("ReviewPage", {
+        attemptId,
+        paperId,
+        title,
+        autoFinish,
+        scorePercent: Number(res?.percentage || 0),
+      });
+    } catch (e) {
+      console.log("submitAttempt error:", e);
+      Alert.alert("Error", e?.data?.message || "Submit failed");
+      finishedRef.current = false;
+    }
   };
+
+  if (isLoading || isFetching) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.helper}>Loading questions...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.helper}>Questions not available</Text>
+        <Pressable style={styles.retryBtn} onPress={refetch}>
+          <Text style={styles.retryText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!total) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.helper}>No questions found</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -184,7 +195,13 @@ export default function PaperPage({ navigation, route }) {
           <PaperComponent
             index={qIndex}
             total={total}
-            question={current}
+            question={{
+              id: current._id,
+              text: current.question,
+              options: current.answers,
+              lessonName: current.lessonName,
+              imageUrl: current.imageUrl,
+            }}
             selectedOption={selectedOption}
             onSelect={onSelect}
           />
@@ -213,11 +230,7 @@ export default function PaperPage({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: BG,
-  },
-
+  screen: { flex: 1, backgroundColor: BG },
   topBar: {
     paddingTop: 14,
     paddingBottom: 12,
@@ -226,38 +239,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-
-  timerPill: {
-    backgroundColor: TIMER_BG,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-  },
-
-  timerText: {
-    color: TIMER_TEXT,
-    fontWeight: "800",
-    fontSize: 12,
-  },
-
-  finishText: {
-    color: FINISH_BLUE,
-    fontWeight: "800",
-    fontSize: 12,
-  },
-
-  centerArea: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-
-  centerBox: {
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
-  },
-
+  timerPill: { backgroundColor: TIMER_BG, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7 },
+  timerText: { color: TIMER_TEXT, fontWeight: "800", fontSize: 12 },
+  finishText: { color: FINISH_BLUE, fontWeight: "800", fontSize: 12 },
+  centerArea: { flex: 1, justifyContent: "center", paddingHorizontal: 16 },
+  centerBox: { width: "100%", maxWidth: 520, alignSelf: "center" },
   bottomBar: {
     backgroundColor: BOTTOM_BAR_BG,
     paddingHorizontal: 16,
@@ -267,18 +253,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
-
-  prevText: {
-    color: TEXT_DARK,
-    fontWeight: "800",
-    fontSize: 13,
-  },
-
-  disabledText: {
-    color: "#E2E8F0",
-    opacity: 0.7,
-  },
-
+  prevText: { color: TEXT_DARK, fontWeight: "800", fontSize: 13 },
+  disabledText: { color: "#E2E8F0", opacity: 0.7 },
   nextBtn: {
     backgroundColor: NEXT_BG,
     paddingVertical: 12,
@@ -288,14 +264,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minWidth: 150,
   },
-
-  nextText: {
-    color: NEXT_TEXT,
-    fontWeight: "900",
-    fontSize: 13,
-  },
-
-  nextDisabled: {
-    opacity: 0.6,
-  },
+  nextText: { color: NEXT_TEXT, fontWeight: "900", fontSize: 13 },
+  nextDisabled: { opacity: 0.6 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
+  helper: { marginTop: 10, textAlign: "center", color: "#64748B", fontSize: 12, fontWeight: "600" },
+  retryBtn: { marginTop: 12, backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
+  retryText: { color: "#fff", fontWeight: "900" },
 });

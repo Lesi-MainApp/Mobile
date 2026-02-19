@@ -1,7 +1,7 @@
 // app/i18n/translations.js
 export const translations = {
   si: {
-    // Common
+    // Common (LEGACY KEPT)
     name: "ku",
     email: "Bfï,a",
     phone: "ÿrl:k wxlh",
@@ -10,22 +10,48 @@ export const translations = {
     address: ",smskh",
     password: "uqrmoh",
     forgotPassword: "wu;l jQ uqrmo@",
-    welcome: "සidorfhka ms,s.ksuq",
+    welcome: "idorfhka ms<s.ksuq",
+
+    // ✅ Language select (added but legacy style kept)
+    selectLanguage: "NdIdj f;darkak",
+    sinhala: "isxy,", 
+    english: "English",
     continue: "bÈßhg",
 
-    // Home dashboard
+    // Legacy lesson keys (UNCHANGED)
+    Date: "Èkh",
+    Time: "fõ,dj",
+    Description: "úia;rh",
+    WatchNow: "msúfikak",
+    Lesson: "mdvu",
+
+    // Navigation (UNCHANGED)
+    navHome: "uq,a msgqj",
+    navLive: "iÔj",
+    navResult: "m%;sM,",
+    navEnroll: ",shdmÈxÑ",
+    navLms: "mdvï",
+
+    // Lessons page messages (UNCHANGED)
+    loadingLessons: "mdvñ mQrKh fjñka mj;S",
+    failedLoadLessons: "mdvï ,nd.ekSu wid¾:lhs",
+    tryAgain: "kej; W;aidy lrkak",
+    noLessons: "mdvï fkdue;",
+    missingClassId: "^classId& fkdue;",
+
+    // Home dashboard (UNCHANGED)
     islandRank: "uq¿ Èjhsfkkau",
     coins: "ldis",
     totalFinishedExams: "iïmQ¾K l, úNd.",
 
-    // Paper library
+    // Paper library (UNCHANGED)
     paperLibrary: "úNd.",
     dailyQuiz: "Èkm;d",
     topicWise: "mdvï wkqj",
     modelPapers: "wdo¾Y m%Yak",
     pastPapers: "miq.sh úNd.",
 
-    // Grade labels
+    // Grade labels (UNCHANGED)
     grade1: "m,uq fY%a‚h",
     grade2: "fojk fY%a‚h",
     grade3: ";=kajk fY%a‚h",
@@ -52,7 +78,17 @@ export const translations = {
     password: "Password",
     forgotPassword: "Forgot password?",
     welcome: "Welcome",
+
+    selectLanguage: "Select Language",
+    sinhala: "Sinhala",
+    english: "English",
     continue: "Continue",
+
+    Date: "Date",
+    Time: "Time",
+    Description: "Description",
+    WatchNow: "Watch Now",
+    Lesson: "Lesson",
 
     islandRank: "Island Rank",
     coins: "Coins",
@@ -63,6 +99,18 @@ export const translations = {
     topicWise: "Topic wise papers",
     modelPapers: "Model papers",
     pastPapers: "Past papers",
+
+    loadingLessons: "Loading lessons...",
+    failedLoadLessons: "Failed to load lessons",
+    tryAgain: "Try again",
+    noLessons: "No lessons available.",
+    missingClassId: "Missing classId",
+
+    navHome: "Home",
+    navLive: "Live",
+    navResult: "Results",
+    navEnroll: "Enroll",
+    navLms: "LMS",
 
     grade1: "Grade One",
     grade2: "Grade Two",

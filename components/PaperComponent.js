@@ -2,115 +2,94 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 
 const TEXT_DARK = "#0F172A";
-
-// ✅ Light gray card like screenshot
-const CARD_BG = "#F8FAFC";
+const MUTED = "#64748B";
 const BORDER = "#E2E8F0";
+const BLUE = "#2563EB";
 
-const RADIO_BORDER = "#CBD5E1";
-const RADIO_FILL = "#1D4ED8";
-
-export default function PaperComponent({
-  index,
-  total,
-  question,
-  selectedOption,
-  onSelect,
-}) {
-  const qNo = index + 1;
+export default function PaperComponent({ index, total, question, selectedOption, onSelect }) {
+  const q = question || {};
+  const options = Array.isArray(q.answers) ? q.answers : [];
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.smallTop}>{`QUESTION ${qNo} OF ${total}`}</Text>
+    <View style={styles.card}>
+      <Text style={styles.topCount}>
+        Question {index + 1} / {total}
+      </Text>
 
-      <Text style={styles.questionText}>{question?.text || ""}</Text>
+      {!!q.lessonName && <Text style={styles.lesson}>{q.lessonName}</Text>}
 
-      <View style={styles.optionsWrap}>
-        {(question?.options || []).map((opt, i) => {
-          const selected = selectedOption === i;
+      <Text style={styles.qText}>{q.question}</Text>
 
+      <View style={{ marginTop: 12, gap: 10 }}>
+        {options.map((opt, i) => {
+          const active = selectedOption === i;
           return (
             <Pressable
-              key={`${question?.id || "q"}_${i}`}
-              onPress={() => onSelect?.(i)}
+              key={`${q._id || "q"}-${i}`}
+              onPress={() => onSelect(i)}
               style={({ pressed }) => [
-                styles.optionCard,
-                pressed && styles.pressed,
-                selected && styles.optionSelected,
+                styles.opt,
+                active && styles.optActive,
+                pressed && { opacity: 0.92 },
               ]}
             >
-              <Text style={styles.optionText}>{opt}</Text>
-
-              <View style={[styles.radioOuter, selected && styles.radioOuterOn]}>
-                {selected ? <View style={styles.radioInner} /> : null}
-              </View>
+              <View style={[styles.dot, active && styles.dotActive]} />
+              <Text style={[styles.optText, active && styles.optTextActive]}>
+                {opt}
+              </Text>
             </Pressable>
           );
         })}
       </View>
+
+      <Text style={styles.helper}>Select one answer and continue.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingTop: 10 },
-
-  smallTop: {
-    color: "#8FA3BF",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 2,
-    marginBottom: 14,
-  },
-
-  questionText: {
-    color: TEXT_DARK,
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "800",
-    marginBottom: 20,
-  },
-
-  optionsWrap: { gap: 14 },
-
-  optionCard: {
-    backgroundColor: CARD_BG,
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 24,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  topCount: { fontSize: 12, fontWeight: "900", color: MUTED },
+  lesson: { marginTop: 6, fontSize: 12, fontWeight: "900", color: BLUE },
+  qText: { marginTop: 10, fontSize: 15, fontWeight: "900", color: TEXT_DARK, lineHeight: 22 },
+  opt: {
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 10,
   },
-
-  optionSelected: {
-    borderColor: "#C7D2FE",
+  optActive: {
+    borderColor: BLUE,
+    backgroundColor: "#EFF6FF",
   },
-
-  optionText: {
-    color: TEXT_DARK,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  radioOuter: {
-    width: 22,
-    height: 22,
+  dot: {
+    width: 14,
+    height: 14,
     borderRadius: 999,
     borderWidth: 2,
-    borderColor: RADIO_BORDER,
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: "#94A3B8",
   },
-  radioOuterOn: { borderColor: RADIO_FILL },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: RADIO_FILL,
+  dotActive: {
+    borderColor: BLUE,
+    backgroundColor: BLUE,
   },
-
-  pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
+  optText: { flex: 1, fontSize: 13, fontWeight: "800", color: TEXT_DARK },
+  optTextActive: { color: BLUE },
+  helper: { marginTop: 12, fontSize: 11, fontWeight: "700", color: MUTED, textAlign: "center" },
 });

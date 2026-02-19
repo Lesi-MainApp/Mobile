@@ -1,10 +1,10 @@
-// pages/DailyQuizMenu.js
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useGetPublishedPapersQuery } from "../app/paperApi";
+import { useStartAttemptMutation } from "../app/attemptApi";
 
 const PRIMARY = "#1153ec";
 const LIGHT_BLUE = "#EFF6FF";
@@ -13,7 +13,6 @@ const LIGHT_BLUE_TEXT = "#1D4ED8";
 
 export default function DailyQuizMenu({ route }) {
   const navigation = useNavigation();
-
   const { gradeNumber, level, stream, subject, mode = "daily" } = route?.params || {};
 
   const canFetch = !!gradeNumber && !!subject && (gradeNumber < 12 || !!stream);
@@ -40,22 +39,27 @@ export default function DailyQuizMenu({ route }) {
     }));
   }, [papersRaw]);
 
-  const onAttempt = (paper, attemptNo) => {
-    navigation.navigate("DailyQuizPaper", {
-      mode,
-      gradeNumber,
-      level,
-      stream: gradeNumber >= 12 ? stream : null,
-      subject,
-      paperId: paper.id,
-      title: paper.title,
-      mcqCount: paper.mcqCount,
-      timeMin: paper.timeMin,
-      attemptNo,
-    });
-  };
+  // ✅ NEW
+  const [startAttempt, { isLoading: starting }] = useStartAttemptMutation();
 
-  const onAttemptNow = (paper) => onAttempt(paper, 1);
+  const onAttemptNow = async (paper) => {
+    try {
+      const res = await startAttempt({ paperId: paper.id }).unwrap();
+
+      const attemptId = String(res?.attempt?._id || "");
+      if (!attemptId) throw new Error("Attempt not created");
+
+      navigation.navigate("PaperPage", {
+        attemptId,
+        paperId: paper.id,
+        title: paper.title,
+        timeMin: Number(res?.paper?.timeMinutes || paper.timeMin || 10),
+      });
+    } catch (e) {
+      console.log("startAttempt error:", e);
+      Alert.alert("Cannot start", e?.data?.message || e?.message || "Try again");
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -101,23 +105,12 @@ export default function DailyQuizMenu({ route }) {
                 </View>
               </View>
 
-              <View style={styles.attemptRow}>
-                {[1, 2, 3].filter((a) => a <= (p.attempts || 1)).map((a) => (
-                  <Pressable
-                    key={a}
-                    onPress={() => onAttempt(p, a)}
-                    style={({ pressed }) => [styles.attemptPill, pressed && styles.pillPressed]}
-                  >
-                    <Text style={styles.attemptText}>Attempt {a}</Text>
-                  </Pressable>
-                ))}
-              </View>
-
               <Pressable
                 onPress={() => onAttemptNow(p)}
-                style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}
+                disabled={starting}
+                style={({ pressed }) => [styles.btn, pressed && styles.btnPressed, starting && { opacity: 0.6 }]}
               >
-                <Text style={styles.btnText}>Attempt Now</Text>
+                <Text style={styles.btnText}>{starting ? "Starting..." : "Attempt Now"}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
               </Pressable>
             </View>
@@ -135,20 +128,12 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 24, gap: 12 },
   card: { backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", elevation: 3 },
   cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A", textAlign: "center" },
-
   metaRowCenter: { marginTop: 10, flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: 10 },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   metaText: { fontSize: 11, fontWeight: "800", color: "#475569" },
-
-  attemptRow: { marginTop: 12, flexDirection: "row", justifyContent: "center", gap: 10, flexWrap: "wrap" },
-  attemptPill: { backgroundColor: LIGHT_BLUE, borderWidth: 1, borderColor: LIGHT_BLUE_BORDER, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999 },
-  pillPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  attemptText: { color: LIGHT_BLUE_TEXT, fontSize: 12, fontWeight: "900" },
-
   btn: { marginTop: 12, height: 44, borderRadius: 14, backgroundColor: PRIMARY, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 },
   btnPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   btnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
-
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
   infoText: { fontSize: 14, fontWeight: "900", color: "#0F172A", textAlign: "center" },
   infoTextSmall: { marginTop: 8, fontSize: 12, fontWeight: "700", color: "#64748B", textAlign: "center" },

@@ -6,6 +6,7 @@ import userReducer from "./features/userSlice";
 import gradeReducer from "./features/gradeSlice";
 import lessonReducer from "./features/lessonSlice";
 import enrollReducer from "./features/enrollSlice";
+import { attemptApi } from "./attemptApi";
 
 import liveUiReducer from "./features/liveSlice";
 import { liveApi } from "./liveApi";
@@ -33,9 +34,9 @@ const store = configureStore({
 
     liveUi: liveUiReducer,
     paper: paperReducer,
-
+    
     languageSelection: languageSelectionReducer,
-
+    [attemptApi.reducerPath]: attemptApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [gradeApi.reducerPath]: gradeApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
@@ -49,6 +50,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       authApi.middleware,
+      attemptApi.middleware,
       gradeApi.middleware,
       userApi.middleware,
       classApi.middleware,

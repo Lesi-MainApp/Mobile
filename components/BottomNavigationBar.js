@@ -1,3 +1,5 @@
+// components/BottomNavigationBar.js
+
 import React from "react";
 import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";

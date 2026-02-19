@@ -19,7 +19,7 @@ export default function Islandrank() {
 
       <Text style={[styles.title, sinFont("bold")]}>{t("islandRank")}</Text>
 
-      <Text style={[styles.rank, sinFont("bold")]}>#18</Text>
+      <Text style={[styles.rank, sinFont("bold")]}>18</Text>
     </LinearGradient>
   );
 }

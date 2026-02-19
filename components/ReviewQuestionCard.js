@@ -2,15 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const TEXT = "#0F172A";
-const MUTED = "#94A3B8";
+const TEXT_DARK = "#0F172A";
+const MUTED = "#64748B";
+const BORDER = "#E2E8F0";
+
+const RED = "#E11D48";
+const GREEN = "#16A34A";
 const BLUE = "#2563EB";
-
-const RED = "#EF4444";
-const RED_SOFT = "#FFECEC";
-
-const GREEN = "#22C55E";
-const GREEN_SOFT = "#EFFFF3";
+const DARK = "#0B1220";
 
 export default function ReviewQuestionCard({
   item,
@@ -21,155 +20,96 @@ export default function ReviewQuestionCard({
 }) {
   const isCorrect = !!item?.isCorrect;
 
-  const borderColor = isCorrect ? GREEN : RED;
-  const bgSoft = isCorrect ? GREEN_SOFT : RED_SOFT;
-
-  const tagText = isCorrect ? "GOOD JOB" : "NEEDS IMPROVEMENT";
-
-  const question = item?.question || "";
   const correctAnswer = item?.correctAnswer || "";
-  const userAnswer = item?.userAnswer || "";
-
-  const showAnswerBox = isCorrect || revealed;
+  const userAnswer = item?.selectedAnswer || "";
 
   return (
-    <View style={[styles.card, { borderColor, backgroundColor: bgSoft }]}>
-      {/* Tag */}
-      <View style={[styles.tag, { borderColor }]}>
-        <Text style={[styles.tagText, { color: borderColor }]}>{tagText}</Text>
+    <View style={styles.card}>
+      <View style={styles.headRow}>
+        <Text style={styles.qNo}>Q{item?.questionNumber}</Text>
+
+        <View style={[styles.badge, isCorrect ? styles.badgeGreen : styles.badgeRed]}>
+          <Ionicons
+            name={isCorrect ? "checkmark-circle" : "close-circle"}
+            size={14}
+            color="#fff"
+          />
+          <Text style={styles.badgeText}>{isCorrect ? "Correct" : "Wrong"}</Text>
+        </View>
       </View>
 
-      {/* Question */}
-      <Text style={styles.qText}>{question}</Text>
+      <Text style={styles.qText}>{item?.question}</Text>
 
-      {/* ✅ If not revealed & wrong -> show only blue button */}
-      {!showAnswerBox ? (
-        <Pressable onPress={onToggleReveal} style={styles.revealBtnFull}>
-          <Text style={styles.revealBtnText}>CLICK TO REVEAL ANSWERS</Text>
-        </Pressable>
-      ) : (
-        <View style={styles.answerBox}>
-          <Text style={styles.answerLabel}>CORRECT ANSWER</Text>
-          <Text style={styles.answerValue}>{correctAnswer}</Text>
+      <Pressable onPress={onToggleReveal} style={styles.revealBtn}>
+        <Text style={styles.revealText}>{revealed ? "Hide Answer" : "Show Answer"}</Text>
+        <Ionicons name={revealed ? "chevron-up" : "chevron-down"} size={18} color={DARK} />
+      </Pressable>
 
-          {!!userAnswer ? (
-            <Text style={styles.userPicked}>You picked: {userAnswer}</Text>
-          ) : (
-            <Text style={styles.userPicked}>You picked: (not answered)</Text>
-          )}
+      {revealed && (
+        <View style={styles.revealBox}>
+          <Text style={styles.line}>
+            Your Answer: <Text style={[styles.bold, !isCorrect && { color: RED }]}>{userAnswer || "-"}</Text>
+          </Text>
+          <Text style={styles.line}>
+            Correct Answer: <Text style={[styles.bold, { color: GREEN }]}>{correctAnswer || "-"}</Text>
+          </Text>
 
-          {/* optional hide button only for wrong answers */}
-          {!isCorrect ? (
-            <Pressable onPress={onToggleReveal} style={styles.hideBtn}>
-              <Text style={styles.hideBtnText}>HIDE ANSWER</Text>
+          <View style={styles.actions}>
+            <Pressable onPress={onExplainLogic} style={styles.btnDark}>
+              <Text style={styles.btnDarkText}>Explain Logic</Text>
             </Pressable>
-          ) : null}
+
+            <Pressable onPress={onExplainVideo} style={styles.btnBlue}>
+              <Text style={styles.btnBlueText}>Explain Video</Text>
+            </Pressable>
+          </View>
         </View>
       )}
-
-      {/* Buttons row */}
-      <View style={styles.actions}>
-        <Pressable onPress={onExplainLogic} style={styles.btnOutline}>
-          <Ionicons name="bulb-outline" size={14} color={BLUE} />
-          <Text style={styles.btnOutlineText}>EXPLAIN LOGIC</Text>
-        </Pressable>
-
-        <Pressable onPress={onExplainVideo} style={styles.btnSolid}>
-          <Ionicons name="play" size={14} color="#fff" />
-          <Text style={styles.btnSolidText}>EXPLAIN VIDEO</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 3,
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
-    padding: 14,
-    marginBottom: 14,
-  },
-
-  tag: {
-    alignSelf: "flex-start",
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    backgroundColor: "#fff",
-    marginBottom: 10,
-  },
-  tagText: { fontWeight: "900", fontSize: 11 },
-
-  qText: { color: TEXT, fontSize: 14, fontWeight: "900", marginBottom: 10 },
-
-  // ✅ Full width reveal button (no box wrapper)
-  revealBtnFull: {
-    backgroundColor: BLUE,
-    paddingVertical: 12,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  revealBtnText: { color: "#fff", fontWeight: "900", fontSize: 12 },
-
-  answerBox: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 12,
+    borderColor: BORDER,
+    padding: 14,
+    marginBottom: 12,
   },
-  answerLabel: {
-    color: MUTED,
-    fontWeight: "900",
-    fontSize: 10,
-    letterSpacing: 0.8,
-  },
-  answerValue: { color: TEXT, fontWeight: "900", fontSize: 13, marginTop: 6 },
-  userPicked: { marginTop: 8, color: MUTED, fontWeight: "800", fontSize: 11 },
+  headRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  qNo: { fontSize: 12, fontWeight: "900", color: MUTED },
 
-  hideBtn: {
-    marginTop: 10,
-    borderWidth: 1.5,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#F8FAFC",
-    paddingVertical: 9,
-    borderRadius: 999,
-    alignItems: "center",
-  },
-  hideBtnText: { color: TEXT, fontWeight: "900", fontSize: 12 },
+  badge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  badgeGreen: { backgroundColor: GREEN },
+  badgeRed: { backgroundColor: RED },
+  badgeText: { color: "#fff", fontWeight: "900", fontSize: 11 },
 
-  actions: {
+  qText: { marginTop: 10, fontSize: 14, fontWeight: "900", color: TEXT_DARK, lineHeight: 20 },
+
+  revealBtn: {
+    marginTop: 12,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
-    marginTop: 10,
   },
-  btnOutline: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderColor: "#BFDBFE",
-    backgroundColor: "#EFF6FF",
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 6,
-  },
-  btnOutlineText: { color: BLUE, fontWeight: "900", fontSize: 12 },
+  revealText: { fontWeight: "900", color: DARK, fontSize: 12 },
 
-  btnSolid: {
-    flex: 1,
-    backgroundColor: BLUE,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 6,
-  },
-  btnSolidText: { color: "#fff", fontWeight: "900", fontSize: 12 },
+  revealBox: { marginTop: 12, backgroundColor: "#F8FAFC", borderRadius: 14, padding: 12, borderWidth: 1, borderColor: BORDER },
+  line: { fontSize: 12, fontWeight: "700", color: TEXT_DARK, marginTop: 6 },
+  bold: { fontWeight: "900" },
+
+  actions: { marginTop: 12, flexDirection: "row", gap: 10, justifyContent: "space-between" },
+  btnDark: { flex: 1, backgroundColor: DARK, paddingVertical: 10, borderRadius: 14, alignItems: "center" },
+  btnDarkText: { color: "#fff", fontWeight: "900", fontSize: 12 },
+
+  btnBlue: { flex: 1, backgroundColor: BLUE, paddingVertical: 10, borderRadius: 14, alignItems: "center" },
+  btnBlueText: { color: "#fff", fontWeight: "900", fontSize: 12 },
 });

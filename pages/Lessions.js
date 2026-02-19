@@ -1,16 +1,12 @@
-// pages/Lessons.js
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useFonts } from "expo-font";
 import { useGetLessonsByClassIdQuery } from "../app/lessonApi";
+import useT from "../app/i18n/useT";
 
 export default function Lessons({ route }) {
-  const [fontsLoaded] = useFonts({
-    FMEmanee: require("../assets/fonts/FMEmaneex.ttf"),
-  });
-
   const navigation = useNavigation();
+  const { t, sinFont } = useT();
 
   // coming from EnrollSubjects page
   const classId = route?.params?.classId || "";
@@ -28,7 +24,6 @@ export default function Lessons({ route }) {
 
   const onWatchNow = (lesson, index) => {
     navigation.navigate("ViewLesson", {
-      // keep your existing param names
       lessonId: lesson?._id,
       lessonNo: index + 1,
 
@@ -38,7 +33,6 @@ export default function Lessons({ route }) {
       description: lesson?.description || "",
       youtubeUrl: lesson?.youtubeUrl || "",
 
-      // keep these too
       classId,
       className,
       grade,
@@ -47,57 +41,72 @@ export default function Lessons({ route }) {
     });
   };
 
-  if (!fontsLoaded) return null;
-
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      {!!className && <Text style={styles.pageTitle}>{className}</Text>}
-      {!!subject && <Text style={styles.pageSub}>{subject}</Text>}
+      {!!className && (
+        <Text style={[styles.pageTitle, sinFont("bold")]}>{className}</Text>
+      )}
+      {!!subject && (
+        <Text style={[styles.pageSub, sinFont("regular")]}>{subject}</Text>
+      )}
 
       {!classId ? (
-        <Text style={styles.centerInfo}>Missing classId</Text>
+        <Text style={[styles.centerInfo, sinFont("bold")]}>{t("missingClassId")}</Text>
       ) : isLoading ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
           <ActivityIndicator />
-          <Text style={{ marginTop: 10, color: "#64748B", fontWeight: "700" }}>
-            Loading lessons...
+          <Text style={[styles.infoText, sinFont("regular")]}>
+            {t("loadingLessons")}
           </Text>
         </View>
       ) : isError ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
-          <Text style={{ color: "#0F172A", fontWeight: "900" }}>
-            Failed to load lessons
+          <Text style={[styles.errTitle, sinFont("bold")]}>
+            {t("failedLoadLessons")}
           </Text>
           <Pressable onPress={refetch} style={{ marginTop: 10 }}>
-            <Text style={{ color: "#214294", fontWeight: "900" }}>Try again</Text>
+            <Text style={[styles.tryAgain, sinFont("bold")]}>
+              {t("tryAgain")}
+            </Text>
           </Pressable>
         </View>
       ) : lessons.length === 0 ? (
-        <Text style={styles.centerInfo}>No lessons available.</Text>
+        <Text style={[styles.centerInfo, sinFont("bold")]}>{t("noLessons")}</Text>
       ) : (
         lessons.map((lesson, idx) => (
           <View style={styles.card} key={lesson?._id || String(idx)}>
-            <Text style={styles.lessonNo}>Lesson {idx + 1}</Text>
+            <Text style={[styles.lessonNo, sinFont("bold")]}>
+              {t("lesson")} {idx + 1}
+            </Text>
 
-            {/* ✅ Sinhala TITLE using FMEmanee (ONE LINE ONLY) */}
-            <Text style={styles.titleFm} numberOfLines={1} ellipsizeMode="tail">
+            {/* Title (Sinhala font) */}
+            <Text style={[styles.titleFm, sinFont("regular")]} numberOfLines={1} ellipsizeMode="tail">
               {lesson?.title || ""}
             </Text>
 
             <View style={styles.metaRow}>
-              <Text style={styles.metaText}>Date : {lesson?.date || "-"}</Text>
-              <Text style={styles.metaText}>Time : {lesson?.time || "-"}</Text>
+              <Text style={[styles.metaText, sinFont("regular")]}>
+                {t("date")} : {lesson?.date || "-"}
+              </Text>
+              <Text style={[styles.metaText, sinFont("regular")]}>
+                {t("time")} : {lesson?.time || "-"}
+              </Text>
             </View>
 
-            {/* ✅ Sinhala DESCRIPTION using FMEmanee */}
             <View style={styles.descWrap}>
-              <Text style={styles.descLabel}>Description :</Text>
-              <Text style={styles.descFm}>{lesson?.description || ""}</Text>
+              <Text style={[styles.descLabel, sinFont("bold")]}>
+                {t("description")} :
+              </Text>
+              <Text style={[styles.descFm, sinFont("regular")]}>
+                {lesson?.description || ""}
+              </Text>
             </View>
 
             <View style={styles.bottomRow}>
               <Pressable style={styles.watchBtn} onPress={() => onWatchNow(lesson, idx)}>
-                <Text style={styles.watchText}>Watch Now</Text>
+                <Text style={[styles.watchText, sinFont("bold")]}>
+                  {t("watchNow")}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -125,12 +134,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 14,
   },
+
   centerInfo: {
     textAlign: "center",
     marginTop: 25,
     color: "#64748B",
     fontWeight: "800",
   },
+
+  infoText: { marginTop: 10, color: "#64748B", fontWeight: "700" },
+  errTitle: { color: "#0F172A", fontWeight: "900" },
+  tryAgain: { color: "#214294", fontWeight: "900" },
 
   card: {
     backgroundColor: "#FFFFFF",
@@ -152,31 +166,30 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  /* ✅ Sinhala title (one line) */
   titleFm: {
-    fontFamily: "FMEmanee",
     fontSize: 17,
     color: "#0F172A",
     marginBottom: 8,
     lineHeight: 20,
     flexShrink: 1,
+    fontWeight: "700",
   },
 
   metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
+    gap: 10,
   },
 
   metaText: {
     fontSize: 12,
     fontWeight: "800",
     color: "#475569",
+    flexShrink: 1,
   },
 
-  descWrap: {
-    marginTop: 2,
-  },
+  descWrap: { marginTop: 2 },
 
   descLabel: {
     fontSize: 13,
@@ -185,12 +198,11 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
 
-  /* ✅ Sinhala description */
   descFm: {
-    fontFamily: "FMEmanee",
     fontSize: 15,
     color: "#64748B",
     lineHeight: 18,
+    fontWeight: "700",
   },
 
   bottomRow: {
