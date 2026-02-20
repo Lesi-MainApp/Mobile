@@ -1,4 +1,4 @@
-// pages/DailyQuizMenu.js
+// src/pages/DailyQuizzMenu.js
 import React, { useMemo } from "react";
 import {
   View,
@@ -13,12 +13,11 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useGetPublishedPapersQuery } from "../app/paperApi";
-import {
-  useStartAttemptMutation,
-  useGetMyAttemptsByPaperQuery,
-} from "../app/attemptApi";
+import { useStartAttemptMutation, useGetMyAttemptsByPaperQuery } from "../app/attemptApi";
+import { useGetMyPaymentStatusQuery } from "../app/paymentApi";
 
 const PRIMARY = "#1153ec";
+const RED_BTN = "#DC2626";
 
 const PaymentBadge = ({ payment, amount }) => {
   const type = String(payment || "free").toLowerCase();
@@ -41,20 +40,36 @@ const PaymentBadge = ({ payment, amount }) => {
   );
 };
 
-const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => {
-  const attemptsLeft = Number(context?.attemptsLeft ?? paper.attempts);
+const PaperCard = ({
+  paper,
+  attemptsContext,
+  paymentContext,
+  onAttemptNow,
+  onViewResult,
+  onPayNow,
+  starting,
+}) => {
+  const payType = String(paper.payment || "free").toLowerCase();
+  const isPaidPaper = payType === "paid";
+
+  // backend should return: { required: true, unlocked: true/false }
+  const unlocked = isPaidPaper ? !!paymentContext?.unlocked : true;
+
+  const attemptsLeft = Number(attemptsContext?.attemptsLeft ?? paper.attempts);
   const isOver = attemptsLeft <= 0;
 
-  const btnText = isOver ? "View Result" : "Attempt Now";
+  // ✅ button logic (same UI)
+  const showPayNow = isPaidPaper && !unlocked;
+  const btnText = showPayNow ? "PAY NOW" : isOver ? "View Result" : "Attempt Now";
 
   const onPress = () => {
-    if (isOver) return onViewResult?.(paper, context);
+    if (showPayNow) return onPayNow?.(paper);
+    if (isOver) return onViewResult?.(paper, attemptsContext);
     return onAttemptNow?.(paper);
   };
 
   return (
     <View style={styles.card}>
-      {/* ✅ TOP RIGHT PAYMENT BADGE */}
       <PaymentBadge payment={paper.payment} amount={paper.amount} />
 
       <Text style={styles.cardTitle}>{paper.title}</Text>
@@ -85,36 +100,58 @@ const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => 
           styles.btn,
           pressed && styles.btnPressed,
           starting && { opacity: 0.6 },
-          isOver && styles.btnLight,
+
+          // ✅ PayNow red (only color change, design same)
+          showPayNow && { backgroundColor: RED_BTN },
+
+          // existing "View Result" light style
+          !showPayNow && isOver && styles.btnLight,
         ]}
       >
-        <Text style={[styles.btnText, isOver && styles.btnTextDark]}>
+        <Text style={[styles.btnText, !showPayNow && isOver && styles.btnTextDark]}>
           {starting ? "Please wait..." : btnText}
         </Text>
+
         <Ionicons
-          name={isOver ? "document-text-outline" : "arrow-forward"}
+          name={
+            showPayNow
+              ? "card-outline"
+              : isOver
+              ? "document-text-outline"
+              : "arrow-forward"
+          }
           size={18}
-          color={isOver ? "#0F172A" : "#FFFFFF"}
+          color={showPayNow ? "#FFFFFF" : isOver ? "#0F172A" : "#FFFFFF"}
         />
       </Pressable>
     </View>
   );
 };
 
-const PaperCardWithAttempts = ({ paper, onAttemptNow, onViewResult, starting }) => {
-  const { data: context, isFetching } = useGetMyAttemptsByPaperQuery(
-    { paperId: paper.id },
-    { skip: !paper?.id }
-  );
+const PaperCardWithContext = ({ paper, onAttemptNow, onViewResult, onPayNow, starting }) => {
+  const { data: attemptsContext, isFetching: attemptsFetching } =
+    useGetMyAttemptsByPaperQuery({ paperId: paper.id }, { skip: !paper?.id });
 
-  const safeContext = isFetching ? null : context;
+  const payType = String(paper.payment || "free").toLowerCase();
+  const needsPayCheck = payType === "paid";
+
+  const { data: paymentContext, isFetching: payFetching } =
+    useGetMyPaymentStatusQuery(
+      { paperId: paper.id },
+      { skip: !paper?.id || !needsPayCheck }
+    );
+
+  const safeAttempts = attemptsFetching ? null : attemptsContext;
+  const safePay = payFetching ? null : paymentContext;
 
   return (
     <PaperCard
       paper={paper}
-      context={safeContext}
+      attemptsContext={safeAttempts}
+      paymentContext={needsPayCheck ? safePay : { required: false, unlocked: true }}
       onAttemptNow={onAttemptNow}
       onViewResult={onViewResult}
+      onPayNow={onPayNow}
       starting={starting}
     />
   );
@@ -164,9 +201,21 @@ export default function DailyQuizMenu({ route }) {
         timeMin: Number(res?.paper?.timeMinutes || paper.timeMin || 10),
       });
     } catch (e) {
-      console.log("startAttempt error:", e);
-      Alert.alert("Cannot start", e?.data?.message || e?.message || "Try again");
+      const msg =
+        e?.status === 402
+          ? "Payment required. Please Pay Now."
+          : e?.data?.message || e?.message || "Try again";
+      Alert.alert("Cannot start", msg);
     }
+  };
+
+  const onPayNow = (paper) => {
+    navigation.navigate("PaymentCheckout", {
+      paperId: paper.id,
+      title: paper.title,
+      amount: Number(paper.amount || 0),
+      backTo: route?.params || {},
+    });
   };
 
   const onViewResult = (paper, context) => {
@@ -211,11 +260,12 @@ export default function DailyQuizMenu({ route }) {
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {PAPERS.map((p) => (
-            <PaperCardWithAttempts
+            <PaperCardWithContext
               key={p.id}
               paper={p}
               onAttemptNow={onAttemptNow}
               onViewResult={onViewResult}
+              onPayNow={onPayNow}
               starting={starting}
             />
           ))}

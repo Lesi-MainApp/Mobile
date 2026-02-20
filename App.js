@@ -44,6 +44,7 @@ import PastpaperMenu from "./pages/PastpaperMenu";
 
 import ReviewPage from "./pages/ReviewPage";
 import PaperPage from "./pages/paper";
+import PaymentCheckout from "./pages/PaymentCheckout";
 
 const Stack = createNativeStackNavigator();
 
@@ -137,7 +138,7 @@ export default function App() {
             <Stack.Screen name="LMS" component={LMSWithLayout} />
             <Stack.Screen name="Result" component={ResultWithLayout} />
             <Stack.Screen name="Profile" component={ProfileWithLayout} />
-
+            <Stack.Screen name="PaymentCheckout" component={PaymentCheckout} />
             <Stack.Screen name="Subjects" component={SubjectsWithLayout} />
             <Stack.Screen
               name="SubjectWithTeachers"

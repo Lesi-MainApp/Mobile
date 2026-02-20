@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useGetLessonsByClassIdQuery } from "../app/lessonApi";
 import useT from "../app/i18n/useT";
@@ -51,7 +58,9 @@ export default function Lessons({ route }) {
       )}
 
       {!classId ? (
-        <Text style={[styles.centerInfo, sinFont("bold")]}>{t("missingClassId")}</Text>
+        <Text style={[styles.centerInfo, sinFont("bold")]}>
+          {t("missingClassId")}
+        </Text>
       ) : isLoading ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
           <ActivityIndicator />
@@ -64,38 +73,48 @@ export default function Lessons({ route }) {
           <Text style={[styles.errTitle, sinFont("bold")]}>
             {t("failedLoadLessons")}
           </Text>
-          <Pressable onPress={refetch} style={{ marginTop: 10 }}>
+
+          <Pressable
+            onPress={() => refetch?.()}
+            style={{ marginTop: 10 }}
+          >
             <Text style={[styles.tryAgain, sinFont("bold")]}>
               {t("tryAgain")}
             </Text>
           </Pressable>
         </View>
       ) : lessons.length === 0 ? (
-        <Text style={[styles.centerInfo, sinFont("bold")]}>{t("noLessons")}</Text>
+        <Text style={[styles.centerInfo, sinFont("bold")]}>
+          {t("noLessons")}
+        </Text>
       ) : (
         lessons.map((lesson, idx) => (
           <View style={styles.card} key={lesson?._id || String(idx)}>
             <Text style={[styles.lessonNo, sinFont("bold")]}>
-              {t("lesson")} {idx + 1}
+              {t("Lesson")} {idx + 1}
             </Text>
 
             {/* Title (Sinhala font) */}
-            <Text style={[styles.titleFm, sinFont("regular")]} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={[styles.titleFm, sinFont("regular")]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {lesson?.title || ""}
             </Text>
 
             <View style={styles.metaRow}>
               <Text style={[styles.metaText, sinFont("regular")]}>
-                {t("date")} : {lesson?.date || "-"}
+                {t("Date")} : {lesson?.date || "-"}
               </Text>
               <Text style={[styles.metaText, sinFont("regular")]}>
-                {t("time")} : {lesson?.time || "-"}
+                {t("Time")} : {lesson?.time || "-"}
               </Text>
             </View>
 
             <View style={styles.descWrap}>
               <Text style={[styles.descLabel, sinFont("bold")]}>
-                {t("description")} :
+                {t("Description")} :
               </Text>
               <Text style={[styles.descFm, sinFont("regular")]}>
                 {lesson?.description || ""}
@@ -103,9 +122,12 @@ export default function Lessons({ route }) {
             </View>
 
             <View style={styles.bottomRow}>
-              <Pressable style={styles.watchBtn} onPress={() => onWatchNow(lesson, idx)}>
+              <Pressable
+                style={styles.watchBtn}
+                onPress={() => onWatchNow(lesson, idx)}
+              >
                 <Text style={[styles.watchText, sinFont("bold")]}>
-                  {t("watchNow")}
+                  {t("WatchNow")}
                 </Text>
               </Pressable>
             </View>
