@@ -9,14 +9,22 @@ import { useStartAttemptMutation, useGetMyAttemptsByPaperQuery } from "../app/at
 
 const PRIMARY = "#1153ec";
 
-const Badge = ({ payment, amount }) => {
+const PaymentBadge = ({ payment, amount }) => {
   const type = String(payment || "free").toLowerCase();
   const isPaid = type === "paid";
-  const bg = isPaid ? "#FEE2E2" : "#DCFCE7";
-  const text = isPaid ? "#991B1B" : "#166534";
-  const label = isPaid ? `PAID • Rs ${Number(amount || 0)}` : "FREE";
+  const isPractice = type === "practise" || type === "practice";
+
+  const bg = isPaid ? "#FEE2E2" : isPractice ? "#FEF3C7" : "#DCFCE7";
+  const text = isPaid ? "#991B1B" : isPractice ? "#92400E" : "#166534";
+
+  const label = isPaid
+    ? `PAID • Rs ${Number(amount || 0)}`
+    : isPractice
+    ? "PRACTISE"
+    : "FREE";
+
   return (
-    <View style={[styles.badge, { backgroundColor: bg }]}>
+    <View style={[styles.badgeTopRight, { backgroundColor: bg }]}>
       <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
     </View>
   );
@@ -35,6 +43,9 @@ const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => 
 
   return (
     <View style={styles.card}>
+      {/* ✅ TOP RIGHT PAYMENT BADGE */}
+      <PaymentBadge payment={paper.payment} amount={paper.amount} />
+
       <Text style={styles.cardTitle}>{paper.title}</Text>
 
       <View style={styles.metaRowCenter}>
@@ -52,10 +63,6 @@ const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => 
           <Ionicons name="repeat-outline" size={16} color="#64748B" />
           <Text style={styles.metaText}>{Math.max(attemptsLeft, 0)}/{paper.attempts} left</Text>
         </View>
-      </View>
-
-      <View style={{ marginTop: 10, alignItems: "center" }}>
-        <Badge payment={paper.payment} amount={paper.amount} />
       </View>
 
       <Pressable
@@ -206,10 +213,30 @@ const styles = StyleSheet.create({
   pageSub: { marginTop: 6, marginBottom: 14, fontSize: 12, fontWeight: "700", color: "#64748B", textAlign: "center" },
   list: { paddingBottom: 24, gap: 12 },
 
-  badge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  badgeText: { fontWeight: "900", fontSize: 11 },
+  card: {
+    position: "relative",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    elevation: 3,
+    overflow: "hidden",
+  },
 
-  card: { backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#E5E7EB", elevation: 3 },
+  badgeTopRight: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    zIndex: 10,
+  },
+  badgeText: { fontWeight: "900", fontSize: 10 },
+
   cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A", textAlign: "center" },
 
   metaRowCenter: { marginTop: 10, flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: 10 },

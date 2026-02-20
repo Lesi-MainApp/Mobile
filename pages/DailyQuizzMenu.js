@@ -1,3 +1,4 @@
+// pages/DailyQuizMenu.js
 import React, { useMemo } from "react";
 import {
   View,
@@ -19,6 +20,27 @@ import {
 
 const PRIMARY = "#1153ec";
 
+const PaymentBadge = ({ payment, amount }) => {
+  const type = String(payment || "free").toLowerCase();
+  const isPaid = type === "paid";
+  const isPractice = type === "practise" || type === "practice";
+
+  const bg = isPaid ? "#FEE2E2" : isPractice ? "#FEF3C7" : "#DCFCE7";
+  const text = isPaid ? "#991B1B" : isPractice ? "#92400E" : "#166534";
+
+  const label = isPaid
+    ? `PAID • Rs ${Number(amount || 0)}`
+    : isPractice
+    ? "PRACTISE"
+    : "FREE";
+
+  return (
+    <View style={[styles.badgeTopRight, { backgroundColor: bg }]}>
+      <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
+    </View>
+  );
+};
+
 const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => {
   const attemptsLeft = Number(context?.attemptsLeft ?? paper.attempts);
   const isOver = attemptsLeft <= 0;
@@ -32,6 +54,9 @@ const PaperCard = ({ paper, context, onAttemptNow, onViewResult, starting }) => 
 
   return (
     <View style={styles.card}>
+      {/* ✅ TOP RIGHT PAYMENT BADGE */}
+      <PaymentBadge payment={paper.payment} amount={paper.amount} />
+
       <Text style={styles.cardTitle}>{paper.title}</Text>
 
       <View style={styles.metaRowCenter}>
@@ -82,7 +107,6 @@ const PaperCardWithAttempts = ({ paper, onAttemptNow, onViewResult, starting }) 
     { skip: !paper?.id }
   );
 
-  // while fetching, still show Attempt Now (safe)
   const safeContext = isFetching ? null : context;
 
   return (
@@ -100,14 +124,14 @@ export default function DailyQuizMenu({ route }) {
   const navigation = useNavigation();
   const { gradeNumber, stream, subject } = route?.params || {};
 
-  const canFetch = !!gradeNumber && !!subject && (gradeNumber < 12 || !!stream);
+  const canFetch = !!gradeNumber && !!subject && (Number(gradeNumber) < 12 || !!stream);
 
   const { data: papersRaw = [], isLoading, isFetching, error } =
     useGetPublishedPapersQuery(
       {
         gradeNumber,
         paperType: "Daily Quiz",
-        stream: gradeNumber >= 12 ? stream : null,
+        stream: Number(gradeNumber) >= 12 ? stream : null,
         subject,
       },
       { skip: !canFetch }
@@ -215,13 +239,29 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 24, gap: 12 },
 
   card: {
+    position: "relative",
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     elevation: 3,
+    overflow: "hidden",
   },
+
+  badgeTopRight: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    zIndex: 10,
+  },
+  badgeText: { fontWeight: "900", fontSize: 10 },
+
   cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A", textAlign: "center" },
 
   metaRowCenter: {
