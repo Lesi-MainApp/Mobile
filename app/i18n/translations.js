@@ -12,9 +12,13 @@ export const translations = {
     forgotPassword: "wu;l jQ uqrmo@",
     welcome: "idorfhka ms<s.ksuq",
 
-    // ✅ Language select (added but legacy style kept)
+    // ✅ Generic titles
+    errorTitle: "Error",
+    successTitle: "Success",
+
+    // ✅ Language select (legacy style kept)
     selectLanguage: "NdIdj f;darkak",
-    sinhala: "isxy,", 
+    sinhala: "isxy,",
     english: "English",
     continue: "bÈßhg",
 
@@ -66,6 +70,82 @@ export const translations = {
     grade12: "fodf,diajk fY%a‚h",
     grade13: "oy;=kajk fY%a‚h",
     grade: "fY%a‚h",
+
+    // ✅ SIGN / AUTH (existing)
+    signUp: ",shdmÈxÑ fjkak",
+    signIn: "we;=¿ jkak",
+    phoneNumber: "jÜiema wxlh",
+    selectDistrict: "Èia;%slalh f;darkak",
+
+    otpSentTitle: "OTP hkjd",
+    otpSentMsg: "OTP WhatsApp + Email fj; hfõ.",
+
+    requiredTitle: "wjYHhs",
+
+    // ✅ Validation messages (existing)
+    errNameRequired: "ku wjYHhs'",
+    errEmailRequired: "Bfï,a wjYHhs'",
+    errPhoneRequired: "jÜiema wxlh wjYHhs",
+    errDistrictRequired: "Èia;%slalh wjYHhs",
+    errTownRequired: "k.rh wjYHhs",
+    errAddressRequired: ",smskh wjYHhs",
+    errPasswordRequired: "uqrmoh wjYHhs'",
+    errPasswordMin6: "uqrmohg wju wl=re ^6& la wjYhs'",
+
+    // ✅ FORGOT PASSWORD SCREEN (NEW, your legacy text)
+    forgotPasswordTitle: "uqrmoh wu;lo@",
+    resetPasswordTitle: "uqrmoh keje; ilikak",
+
+    fpSendSubtitle: "lreKdlr ÿrl:k wxlh fyda Bfï,a we;=,;a lrkak",
+    fpResetSubtitle: "bÈßhg hdug kj uqrmoh we;=<;a lrkak",
+
+    fpPlaceholderIdentifier: "Bfï,a fyda jÜiema wxlh we;=,;a lrkak",
+    fpPlaceholderNewPassword: "kj uqrmoh",
+    fpPlaceholderConfirmPassword: "kej; kj uqrmoh we;=,;a lrkak",
+
+    fpSendOtpBtn: "OTP yjkak",
+    back: "miqmig hkak",
+    fpVerifyOtpAgain: "OTP kej; ;yjqre lrkak",
+
+    fpEnterIdentifier: "ÿrl:k wxlh fyda Bfï,a we;=,;a lrkak",
+    fpOtpSentMsg: "OTP WhatsApp + Email fj; hfõ.",
+    fpSendFailed: "OTP hEùu wid¾:hl",
+
+    rpMissingIdentifier: "ÿrl:k wxlh fyda Bfï,a fkdue;",
+    rpOtpMissing: "OTP fkdue;'. kej; ;yjqre lrkak",
+    rpEnterPasswords: "kj uqrmoh iy ;yjqre uqrmoh we;=,;a lrkak",
+    rpPasswordsMismatch: "uqrmoh fkdl<sfh'",
+    rpSuccessManualSignin: "uqrmoh fjkia l<d' kej; we;=¿ jkak",
+    rpResetFailed: "uqrmoh fjkia lsÍu wid¾:hl",
+
+    // ✅ District labels (UNCHANGED)
+    districts: {
+      Ampara: "wïmdr",
+      Anuradhapura: "wkqrdOmqr",
+      Badulla: "nÿ,a,",
+      Batticaloa: "uvl,mqj",
+      Colombo: "fld<U",
+      Galle: ".d,a,",
+      Gampaha: ".ïmy",
+      Hambantota: "yïnkaf;dg",
+      Jaffna: "hdmkh",
+      Kalutara: "l¿;r",
+      Kandy: "kqjr",
+      Kegalle: "lE.,a,",
+      Kilinochchi: "ls<sfkdÉÑh",
+      Kurunegala: "l=reKE.,",
+      Mannar: "ukakdru",
+      Matale: "ud;f,a",
+      Matara: "ud;r",
+      Monaragala: "fudkrd.,",
+      Mullaitivu: "uq,;sjq",
+      NuwaraEliya: "kqjrt<sh",
+      Polonnaruwa: "fmdf,dkakrej",
+      Puttalam: "mq;a;,u",
+      Ratnapura: "r;akmqr",
+      Trincomalee: ";%sl=Kdu,h",
+      Vavuniya: "jjqkshdj",
+    },
   },
 
   en: {
@@ -78,6 +158,9 @@ export const translations = {
     password: "Password",
     forgotPassword: "Forgot password?",
     welcome: "Welcome",
+
+    errorTitle: "Error",
+    successTitle: "Success",
 
     selectLanguage: "Select Language",
     sinhala: "Sinhala",
@@ -126,5 +209,78 @@ export const translations = {
     grade12: "Grade Twelve",
     grade13: "Grade Thirteen",
     grade: "Grade",
+
+    signUp: "Sign Up",
+    signIn: "Sign In",
+    phoneNumber: "Phone Number",
+    selectDistrict: "Select District",
+
+    otpSentTitle: "OTP Sent",
+    otpSentMsg: "We sent OTP to your WhatsApp + Email.",
+
+    requiredTitle: "Required",
+
+    errNameRequired: "Name is required",
+    errEmailRequired: "Email is required",
+    errPhoneRequired: "Phone number is required",
+    errDistrictRequired: "District is required",
+    errTownRequired: "Town is required",
+    errAddressRequired: "Address is required",
+    errPasswordRequired: "Password is required",
+    errPasswordMin6: "Password must be at least 6 characters",
+
+    // ✅ FORGOT PASSWORD SCREEN (EN)
+    forgotPasswordTitle: "Forgot Password",
+    resetPasswordTitle: "Reset Password",
+
+    fpSendSubtitle: "Enter your phone number or email to receive OTP",
+    fpResetSubtitle: "Enter your new password to continue",
+
+    fpPlaceholderIdentifier: "Phone or Email",
+    fpPlaceholderNewPassword: "New Password",
+    fpPlaceholderConfirmPassword: "Confirm New Password",
+
+    fpSendOtpBtn: "Send OTP",
+    back: "Back",
+    fpVerifyOtpAgain: "Verify OTP Again",
+
+    fpEnterIdentifier: "Enter phone number or email",
+    fpOtpSentMsg: "We sent OTP to your WhatsApp + Email.",
+    fpSendFailed: "Failed to send OTP",
+
+    rpMissingIdentifier: "Missing identifier (phone/email)",
+    rpOtpMissing: "OTP code missing. Please verify again.",
+    rpEnterPasswords: "Enter new password and confirm password",
+    rpPasswordsMismatch: "Passwords do not match",
+    rpSuccessManualSignin: "Password updated. Please sign in.",
+    rpResetFailed: "Reset failed",
+
+    districts: {
+      Ampara: "Ampara",
+      Anuradhapura: "Anuradhapura",
+      Badulla: "Badulla",
+      Batticaloa: "Batticaloa",
+      Colombo: "Colombo",
+      Galle: "Galle",
+      Gampaha: "Gampaha",
+      Hambantota: "Hambantota",
+      Jaffna: "Jaffna",
+      Kalutara: "Kalutara",
+      Kandy: "Kandy",
+      Kegalle: "Kegalle",
+      Kilinochchi: "Kilinochchi",
+      Kurunegala: "Kurunegala",
+      Mannar: "Mannar",
+      Matale: "Matale",
+      Matara: "Matara",
+      Monaragala: "Monaragala",
+      Mullaitivu: "Mullaitivu",
+      NuwaraEliya: "Nuwara Eliya",
+      Polonnaruwa: "Polonnaruwa",
+      Puttalam: "Puttalam",
+      Ratnapura: "Ratnapura",
+      Trincomalee: "Trincomalee",
+      Vavuniya: "Vavuniya",
+    },
   },
 };

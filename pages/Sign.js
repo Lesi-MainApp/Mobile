@@ -33,15 +33,39 @@ import { useSaveStudentGradeSelectionMutation } from "../app/userApi";
 import { useSaveLanguageSelectionMutation } from "../app/languageApi";
 import { loadStoredLanguage } from "../app/languageStorage";
 
+// ✅ i18n
+import useT from "../app/i18n/useT";
+
 const BG_INPUT = "#F1F5F9";
 const PLACEHOLDER = "#97A4B8";
 const PRIMARY = "#214294";
 
 const SRI_LANKA_DISTRICTS = [
-  "Ampara","Anuradhapura","Badulla","Batticaloa","Colombo","Galle","Gampaha",
-  "Hambantota","Jaffna","Kalutara","Kandy","Kegalle","Kilinochchi","Kurunegala",
-  "Mannar","Matale","Matara","Monaragala","Mullaitivu","Nuwara Eliya","Polonnaruwa",
-  "Puttalam","Ratnapura","Trincomalee","Vavuniya",
+  "Ampara",
+  "Anuradhapura",
+  "Badulla",
+  "Batticaloa",
+  "Colombo",
+  "Galle",
+  "Gampaha",
+  "Hambantota",
+  "Jaffna",
+  "Kalutara",
+  "Kandy",
+  "Kegalle",
+  "Kilinochchi",
+  "Kurunegala",
+  "Mannar",
+  "Matale",
+  "Matara",
+  "Monaragala",
+  "Mullaitivu",
+  "NuwaraEliya",
+  "Polonnaruwa",
+  "Puttalam",
+  "Ratnapura",
+  "Trincomalee",
+  "Vavuniya",
 ];
 
 const parseGradeNumber = (gradeLabel) => {
@@ -51,12 +75,12 @@ const parseGradeNumber = (gradeLabel) => {
 
 export default function Sign({ navigation, route }) {
   const dispatch = useDispatch();
+  const { t, sinFont } = useT();
 
   const [signup] = useSignupMutation();
   const [signin] = useSigninMutation();
   const [saveGradeSelection] = useSaveStudentGradeSelectionMutation();
 
-  // ✅ NEW
   const [saveLanguageSelection] = useSaveLanguageSelectionMutation();
 
   const selectedLevel = useSelector((s) => s?.auth?.selectedLevel);
@@ -122,7 +146,6 @@ export default function Sign({ navigation, route }) {
     }
   };
 
-  // ✅ NEW: save language to backend (after login)
   const trySaveLanguageOnce = async () => {
     try {
       const stored = await loadStoredLanguage();
@@ -133,7 +156,6 @@ export default function Sign({ navigation, route }) {
     }
   };
 
-  // ✅ frontend required validation (signup)
   const validateSignup = () => {
     const n = name.trim();
     const em = email.trim();
@@ -143,14 +165,14 @@ export default function Sign({ navigation, route }) {
     const ad = address.trim();
     const pw = String(passwordUp || "");
 
-    if (!n) return "Name is required";
-    if (!em) return "Email is required";
-    if (!ph) return "Phone number is required";
-    if (!dis) return "District is required";
-    if (!tw) return "Town is required";
-    if (!ad) return "Address is required";
-    if (!pw) return "Password is required";
-    if (pw.length < 6) return "Password must be at least 6 characters";
+    if (!n) return "errNameRequired";
+    if (!em) return "errEmailRequired";
+    if (!ph) return "errPhoneRequired";
+    if (!dis) return "errDistrictRequired";
+    if (!tw) return "errTownRequired";
+    if (!ad) return "errAddressRequired";
+    if (!pw) return "errPasswordRequired";
+    if (pw.length < 6) return "errPasswordMin6";
     return null;
   };
 
@@ -159,9 +181,9 @@ export default function Sign({ navigation, route }) {
       setLoading(true);
 
       if (isSignUp) {
-        const err = validateSignup();
-        if (err) {
-          Alert.alert("Required", err);
+        const errKey = validateSignup();
+        if (errKey) {
+          Alert.alert(t("requiredTitle"), t(errKey));
           setLoading(false);
           return;
         }
@@ -172,8 +194,7 @@ export default function Sign({ navigation, route }) {
           whatsappnumber: phone.trim(),
           password: passwordUp,
           role: "student",
-
-          district: district.trim(),
+          district: district.trim(), // ✅ backend EN key
           town: town.trim(),
           address: address.trim(),
         };
@@ -189,7 +210,7 @@ export default function Sign({ navigation, route }) {
           })
         );
 
-        Alert.alert("OTP Sent", "We sent OTP to your WhatsApp + Email.");
+        Alert.alert(t("otpSentTitle"), t("otpSentMsg"));
 
         navigation.navigate("OTP", {
           phone: payload.whatsappnumber,
@@ -198,7 +219,6 @@ export default function Sign({ navigation, route }) {
         return;
       }
 
-      // ✅ Signin
       const loginPayload = {
         whatsappnumber: phoneIn.trim(),
         password: passwordIn,
@@ -210,8 +230,6 @@ export default function Sign({ navigation, route }) {
       dispatch(setUser(res?.user || null));
 
       await trySaveSelectionOnce(res?.user);
-
-      // ✅ NEW: save selected language to backend
       await trySaveLanguageOnce();
 
       navigation.replace("Home");
@@ -223,11 +241,22 @@ export default function Sign({ navigation, route }) {
     }
   };
 
+  const getDistrictLabel = (d) => {
+    const dict = t("districts");
+    if (dict && typeof dict === "object" && dict[d]) return dict[d];
+    return d;
+  };
+
   const DistrictPicker = () => (
     <Modal visible={districtModal} transparent animationType="fade">
-      <Pressable style={styles.modalOverlay} onPress={() => setDistrictModal(false)}>
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => setDistrictModal(false)}
+      >
         <Pressable style={styles.modalCard} onPress={() => {}}>
-          <Text style={styles.modalTitle}>Select District</Text>
+          <Text style={[styles.modalTitle, sinFont("bold")]}>
+            {t("selectDistrict")}
+          </Text>
 
           <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
             {SRI_LANKA_DISTRICTS.map((d) => (
@@ -235,11 +264,13 @@ export default function Sign({ navigation, route }) {
                 key={d}
                 style={styles.modalItem}
                 onPress={() => {
-                  setDistrict(d);
+                  setDistrict(d); // ✅ EN key saved
                   setDistrictModal(false);
                 }}
               >
-                <Text style={styles.modalItemText}>{d}</Text>
+                <Text style={[styles.modalItemText, sinFont("bold")]}>
+                  {getDistrictLabel(d)}
+                </Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -257,27 +288,30 @@ export default function Sign({ navigation, route }) {
       >
         <View style={styles.centerSignin}>
           <Image source={lesiiskole_logo} style={styles.logoSmall} resizeMode="contain" />
-          <Text style={styles.welcome}>Welcome</Text>
+
+          <Text style={[styles.welcome, sinFont("bold")]}>{t("welcome")}</Text>
 
           <View style={styles.toggleContainer}>
             <Pressable onPress={() => setMode("signup")} style={toggleBtnStyle(false)}>
-              <Text style={toggleTextStyle(false)}>Sign Up</Text>
+              <Text style={[...toggleTextStyle(false), sinFont()]}>{t("signUp")}</Text>
             </Pressable>
 
             <Pressable onPress={() => setMode("signin")} style={toggleBtnStyle(true)}>
-              <Text style={toggleTextStyle(true)}>Sign In</Text>
+              <Text style={[...toggleTextStyle(true), sinFont()]}>{t("signIn")}</Text>
             </Pressable>
           </View>
 
           <View style={styles.form}>
             <Field
-              placeholder="Phone Number"
+              placeholder={t("phoneNumber")}
+              placeholderFont={sinFont()} // ✅ placeholder legacy only
               value={phoneIn}
               onChangeText={setPhoneIn}
               keyboardType="phone-pad"
             />
             <Field
-              placeholder="Password"
+              placeholder={t("password")}
+              placeholderFont={sinFont()} // ✅ placeholder legacy only
               value={passwordIn}
               onChangeText={setPasswordIn}
               secureTextEntry
@@ -287,7 +321,7 @@ export default function Sign({ navigation, route }) {
               onPress={() => navigation.navigate("ForgotPassword")}
               style={styles.forgotWrap}
             >
-              <Text style={styles.forgotText}>Forgot password?</Text>
+              <Text style={[styles.forgotText, sinFont("bold")]}>{t("forgotPassword")}</Text>
             </Pressable>
 
             <Pressable onPress={onContinue} style={styles.gradientBtnOuter}>
@@ -300,7 +334,9 @@ export default function Sign({ navigation, route }) {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.gradientBtnText}>Continue</Text>
+                  <Text style={[styles.gradientBtnText, sinFont("bold")]}>
+                    {t("continue")}
+                  </Text>
                 )}
               </LinearGradient>
             </Pressable>
@@ -320,29 +356,36 @@ export default function Sign({ navigation, route }) {
 
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Image source={lesiiskole_logo} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.welcome}>Welcome</Text>
+        <Text style={[styles.welcome, sinFont("bold")]}>{t("welcome")}</Text>
 
         <View style={styles.toggleContainer}>
           <Pressable onPress={() => setMode("signup")} style={toggleBtnStyle(true)}>
-            <Text style={toggleTextStyle(true)}>Sign Up</Text>
+            <Text style={[...toggleTextStyle(true), sinFont()]}>{t("signUp")}</Text>
           </Pressable>
 
           <Pressable onPress={() => setMode("signin")} style={toggleBtnStyle(false)}>
-            <Text style={toggleTextStyle(false)}>Sign In</Text>
+            <Text style={[...toggleTextStyle(false), sinFont()]}>{t("signIn")}</Text>
           </Pressable>
         </View>
 
         <View style={styles.form}>
-          <Field placeholder="Name" value={name} onChangeText={setName} />
           <Field
-            placeholder="Email"
+            placeholder={t("name")}
+            placeholderFont={sinFont()}
+            value={name}
+            onChangeText={setName}
+          />
+          <Field
+            placeholder={t("email")}
+            placeholderFont={sinFont()}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <Field
-            placeholder="Phone Number"
+            placeholder={t("phoneNumber")}
+            placeholderFont={sinFont()}
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
@@ -352,21 +395,33 @@ export default function Sign({ navigation, route }) {
             onPress={() => setDistrictModal(true)}
             style={[styles.input, { justifyContent: "center" }]}
           >
-            <Text style={{ color: district ? "#0F172A" : PLACEHOLDER, fontWeight: "700" }}>
-              {district || "District"}
+            <Text
+              style={[
+                { color: district ? "#0F172A" : PLACEHOLDER, fontWeight: "700" },
+                sinFont("bold"),
+              ]}
+            >
+              {district ? getDistrictLabel(district) : t("district")}
             </Text>
           </Pressable>
 
-          <Field placeholder="Town" value={town} onChangeText={setTown} />
           <Field
-            placeholder="Address"
+            placeholder={t("town")}
+            placeholderFont={sinFont()}
+            value={town}
+            onChangeText={setTown}
+          />
+          <Field
+            placeholder={t("address")}
+            placeholderFont={sinFont()}
             value={address}
             onChangeText={setAddress}
             multiline
             style={{ minHeight: 90, textAlignVertical: "top", paddingTop: 12 }}
           />
           <Field
-            placeholder="Password"
+            placeholder={t("password")}
+            placeholderFont={sinFont()}
             value={passwordUp}
             onChangeText={setPasswordUp}
             secureTextEntry
@@ -382,7 +437,9 @@ export default function Sign({ navigation, route }) {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.gradientBtnText}>Continue</Text>
+                <Text style={[styles.gradientBtnText, sinFont("bold")]}>
+                  {t("continue")}
+                </Text>
               )}
             </LinearGradient>
           </Pressable>
@@ -394,6 +451,7 @@ export default function Sign({ navigation, route }) {
 
 function Field({
   placeholder,
+  placeholderFont, // ✅ legacy style only for placeholder overlay
   value,
   onChangeText,
   keyboardType,
@@ -402,18 +460,44 @@ function Field({
   multiline,
   style,
 }) {
+  const empty = !String(value || "").length;
+
   return (
-    <TextInput
-      placeholder={placeholder}
-      placeholderTextColor={PLACEHOLDER}
-      value={value}
-      onChangeText={onChangeText}
-      keyboardType={keyboardType}
-      secureTextEntry={secureTextEntry}
-      autoCapitalize={autoCapitalize}
-      multiline={multiline}
-      style={[styles.input, style]}
-    />
+    <View style={[styles.inputWrap, multiline ? { minHeight: 90 } : null]}>
+      {/* ✅ Legacy placeholder overlay (ABOVE TextInput) */}
+      {empty ? (
+        <Text
+          pointerEvents="none"
+          style={[
+            styles.fakePlaceholder,
+            placeholderFont, // ✅ FMEmaneex ONLY here
+            multiline ? { top: 12 } : null,
+          ]}
+          numberOfLines={multiline ? 2 : 1}
+        >
+          {placeholder}
+        </Text>
+      ) : null}
+
+      <TextInput
+        placeholder="" // ✅ hide real placeholder
+        placeholderTextColor="transparent"
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
+        multiline={multiline}
+        allowFontScaling={false}
+        underlineColorAndroid="transparent"
+        style={[
+          styles.input,
+          styles.realInputLayer, // ✅ keep it under overlay
+          multiline ? { height: undefined } : null,
+          style,
+        ]}
+      />
+    </View>
   );
 }
 
@@ -473,6 +557,12 @@ const styles = StyleSheet.create({
 
   form: { width: "100%", gap: 10 },
 
+  // ✅ Wrapper for overlay placeholder
+  inputWrap: {
+    width: "100%",
+    position: "relative",
+  },
+
   input: {
     width: "100%",
     height: 48,
@@ -482,6 +572,28 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     borderWidth: 1,
     borderColor: "#E2E8F0",
+  },
+
+  // ✅ Ensure TextInput is BELOW overlay
+  realInputLayer: {
+    zIndex: 1,
+    elevation: 1,
+  },
+
+  // ✅ Overlay placeholder ABOVE TextInput
+  fakePlaceholder: {
+    position: "absolute",
+    left: 14,
+    right: 14,
+    // vertical center for single-line
+    top: Platform.OS === "ios" ? 15 : 0,
+    height: 48,
+    color: PLACEHOLDER,
+    fontSize: 14,
+    fontWeight: "400",
+    textAlignVertical: "center", // Android
+    zIndex: 5,
+    elevation: 5, // Android
   },
 
   forgotWrap: { alignSelf: "flex-end", marginTop: 2, marginBottom: 6 },
