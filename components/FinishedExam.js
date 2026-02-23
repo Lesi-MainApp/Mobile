@@ -2,15 +2,19 @@ import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import exam from "../assets/exam.png";
 import useT from "../app/i18n/useT";
+import { useGetMyStatsQuery } from "../app/attemptApi";
 
 export default function FinishedExam() {
   const { t, sinFont } = useT();
+  const { data } = useGetMyStatsQuery();
+
+  const finishedCount = Number(data?.totalFinishedExams || 0);
 
   return (
     <View style={styles.container}>
       <Text style={[styles.title, sinFont("bold")]}>{t("totalFinishedExams")}</Text>
       <Image source={exam} style={styles.image} />
-      <Text style={[styles.count, sinFont("bold")]}>50</Text>
+      <Text style={[styles.count, sinFont("bold")]}>{finishedCount}</Text>
     </View>
   );
 }

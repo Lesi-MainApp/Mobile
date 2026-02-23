@@ -12,7 +12,8 @@ import paperReducer from "./features/paperSlice";
 
 // ✅ language
 import languageSelectionReducer from "./features/languageSelectionSlice";
-
+import rankReducer from "./features/rankSlice";
+import { rankApi } from "./rankApi";
 // RTK Query apis
 import { attemptApi } from "./attemptApi";
 import { liveApi } from "./liveApi";
@@ -35,7 +36,7 @@ const store = configureStore({
 
     liveUi: liveUiReducer,
     paper: paperReducer,
-
+    rank: rankReducer,
     languageSelection: languageSelectionReducer,
 
     // ✅ RTK Query reducers
@@ -49,6 +50,7 @@ const store = configureStore({
     [enrollApi.reducerPath]: enrollApi.reducer,
     [paperApi.reducerPath]: paperApi.reducer,
     [liveApi.reducerPath]: liveApi.reducer,
+    [rankApi.reducerPath]: rankApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -63,7 +65,8 @@ const store = configureStore({
       enrollApi.middleware,
       paperApi.middleware,
       liveApi.middleware,
-      paymentApi.middleware
+      paymentApi.middleware,
+      rankApi.middleware
     ),
 });
 

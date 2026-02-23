@@ -37,6 +37,8 @@ import ModelPaper from "./pages/Modelpaper";
 import PastPapers from "./pages/Pastpapers";
 
 import EnrollSubjects from "./pages/EnrollSubjects";
+import Registersubject from "./pages/Registersubject"; // ✅ NEW FILE (Completed Papers)
+
 import DailyQuizMenu from "./pages/DailyQuizzMenu";
 import TopicWiseMenu from "./pages/TopicWisemenu";
 import ModelPaperMenu from "./pages/ModelPaperMenu";
@@ -71,6 +73,7 @@ const SubjectsWithLayout = withSecondLayout(Subjects);
 const SubjectWithTeachersWithLayout = withSecondLayout(SubjectWithTeachers);
 
 const EnrollSubjectsWithLayout = withSecondLayout(EnrollSubjects);
+const RegistersubjectWithLayout = withSecondLayout(Registersubject); // ✅ SecondLayout
 
 const DailyQuizWithLayout = withSecondLayout(DailyQuiz);
 const TopicWisePaperWithLayout = withSecondLayout(TopicWisePaper);
@@ -82,11 +85,7 @@ const TopicWiseMenuWithLayout = withSecondLayout(TopicWiseMenu);
 const ModelPaperMenuWithLayout = withSecondLayout(ModelPaperMenu);
 const PastpaperMenuWithLayout = withSecondLayout(PastpaperMenu);
 
-// ✅ NEW: ReviewPage inside SecondLayout
 const ReviewPageWithLayout = withSecondLayout(ReviewPage);
-
-// (Optional) If you also want quiz paper screen inside layout, use this:
-// const PaperPageWithLayout = withSecondLayout(PaperPage);
 
 export default function App() {
   const [fontsReady, setFontsReady] = useState(false);
@@ -95,10 +94,7 @@ export default function App() {
     (async () => {
       try {
         await Font.loadAsync({
-          // ✅ Splash page font
           FM_Derana: require("./assets/fonts/FM_Derana.ttf"),
-
-          // ✅ All other pages font
           FMEmaneex: require("./assets/fonts/FMEmaneex.ttf"),
         });
       } catch (e) {
@@ -139,6 +135,7 @@ export default function App() {
             <Stack.Screen name="Result" component={ResultWithLayout} />
             <Stack.Screen name="Profile" component={ProfileWithLayout} />
             <Stack.Screen name="PaymentCheckout" component={PaymentCheckout} />
+
             <Stack.Screen name="Subjects" component={SubjectsWithLayout} />
             <Stack.Screen
               name="SubjectWithTeachers"
@@ -147,9 +144,17 @@ export default function App() {
             <Stack.Screen name="IndexNumber" component={IndexNumberWithLayout} />
             <Stack.Screen name="Lessons" component={LessonsWithLayout} />
             <Stack.Screen name="ViewLesson" component={ViewLessonWithLayout} />
+
+            {/* ✅ EnrollSubjects = separate page (HIDE bottom bar there) */}
             <Stack.Screen
               name="EnrollSubjects"
               component={EnrollSubjectsWithLayout}
+            />
+
+            {/* ✅ Registersubject = Completed Papers page (SHOW bottom bar here) */}
+            <Stack.Screen
+              name="Registersubject"
+              component={RegistersubjectWithLayout}
             />
 
             <Stack.Screen name="DailyQuiz" component={DailyQuizWithLayout} />
@@ -177,15 +182,8 @@ export default function App() {
               component={PastpaperMenuWithLayout}
             />
 
-            {/* ✅ ReviewPage now uses SecondLayout */}
             <Stack.Screen name="ReviewPage" component={ReviewPageWithLayout} />
-
-            {/* keep PaperPage same (no layout) */}
             <Stack.Screen name="PaperPage" component={PaperPage} />
-
-            {/* If you decide PaperPage should ALSO use layout, swap above line with:
-                <Stack.Screen name="PaperPage" component={PaperPageWithLayout} />
-            */}
           </Stack.Navigator>
         </RootLayout>
       </NavigationContainer>

@@ -1,11 +1,16 @@
 import React from "react";
-import { StyleSheet, Image, Text } from "react-native";
+import { StyleSheet, Image, Text, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import cup from "../assets/cup.png";
 import useT from "../app/i18n/useT";
+import { useGetIslandRankQuery } from "../app/rankApi";
 
 export default function Islandrank() {
   const { t, sinFont } = useT();
+
+  const { data, isLoading, isError } = useGetIslandRankQuery({ limit: 50 });
+
+  const rank = data?.me?.rank ?? 0;
 
   return (
     <LinearGradient
@@ -19,7 +24,15 @@ export default function Islandrank() {
 
       <Text style={[styles.title, sinFont("bold")]}>{t("islandRank")}</Text>
 
-      <Text style={[styles.rank, sinFont("bold")]}>18</Text>
+      {isLoading ? (
+        <ActivityIndicator />
+      ) : isError ? (
+        <Text style={[styles.rank, sinFont("bold")]}>-</Text>
+      ) : (
+        <Text style={[styles.rank, sinFont("bold")]}>
+          {rank > 0 ? String(rank) : "-"}
+        </Text>
+      )}
     </LinearGradient>
   );
 }

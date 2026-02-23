@@ -1,3 +1,4 @@
+// app/attemptApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { BASE_URL } from "./api/api";
 
@@ -44,7 +45,6 @@ export const attemptApi = createApi({
       }),
     }),
 
-    // ✅ NEW: paper attempts status for current student
     getMyAttemptsByPaper: builder.query({
       query: ({ paperId }) => ({
         url: `/my/${paperId}`,
@@ -52,7 +52,6 @@ export const attemptApi = createApi({
       }),
     }),
 
-    // ✅ NEW: summary (for retry info)
     getAttemptSummary: builder.query({
       query: ({ attemptId }) => ({
         url: `/summary/${attemptId}`,
@@ -66,6 +65,32 @@ export const attemptApi = createApi({
         method: "GET",
       }),
     }),
+
+    // ✅ BEST result per paper
+    getMyCompletedPapers: builder.query({
+      query: () => ({
+        url: `/completed`,
+        method: "GET",
+      }),
+      transformResponse: (res) => {
+        if (Array.isArray(res?.items)) return { items: res.items };
+        return { items: [] };
+      },
+    }),
+
+    // ✅ NEW: totals for dashboard boxes
+    getMyStats: builder.query({
+      query: () => ({
+        url: `/stats`,
+        method: "GET",
+      }),
+      transformResponse: (res) => {
+        return {
+          totalCoins: Number(res?.totalCoins || 0),
+          totalFinishedExams: Number(res?.totalFinishedExams || 0),
+        };
+      },
+    }),
   }),
 });
 
@@ -76,7 +101,11 @@ export const {
   useSubmitAttemptMutation,
   useGetAttemptReviewQuery,
 
-  // ✅ new hooks
   useGetMyAttemptsByPaperQuery,
   useGetAttemptSummaryQuery,
+
+  useGetMyCompletedPapersQuery,
+
+  // ✅ NEW
+  useGetMyStatsQuery,
 } = attemptApi;

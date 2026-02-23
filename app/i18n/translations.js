@@ -12,50 +12,46 @@ export const translations = {
     forgotPassword: "wu;l jQ uqrmo@",
     welcome: "idorfhka ms<s.ksuq",
 
-    // ✅ Generic titles
     errorTitle: "Error",
     successTitle: "Success",
 
-    // ✅ Language select (legacy style kept)
     selectLanguage: "NdIdj f;darkak",
     sinhala: "isxy,",
     english: "English",
     continue: "bÈßhg",
 
-    // Legacy lesson keys (UNCHANGED)
-    Date: "Èkh",
-    Time: "fõ,dj",
-    Description: "úia;rh",
+    // ✅ ONLY LABELS translated to Sinhala (backend values NOT translated)
+    Date: "දිනය",
+    Time: "වේලාව",
+    Description: "විස්තරය",
+
     WatchNow: "msúfikak",
     Lesson: "mdvu",
 
-    // Navigation (UNCHANGED)
+    ViewLesson: "mdvï n,kak",
+
     navHome: "uq,a msgqj",
     navLive: "iÔj",
     navResult: "m%;sM,",
     navEnroll: ",shdmÈxÑ",
     navLms: "mdvï",
 
-    // Lessons page messages (UNCHANGED)
     loadingLessons: "mdvñ mQrKh fjñka mj;S",
     failedLoadLessons: "mdvï ,nd.ekSu wid¾:lhs",
     tryAgain: "kej; W;aidy lrkak",
     noLessons: "mdvï fkdue;",
     missingClassId: "^classId& fkdue;",
 
-    // Home dashboard (UNCHANGED)
     islandRank: "uq¿ Èjhsfkkau",
     coins: "ldis",
     totalFinishedExams: "iïmQ¾K l, úNd.",
 
-    // Paper library (UNCHANGED)
     paperLibrary: "úNd.",
     dailyQuiz: "Èkm;d",
     topicWise: "mdvï wkqj",
     modelPapers: "wdo¾Y m%Yak",
     pastPapers: "miq.sh úNd.",
 
-    // Grade labels (UNCHANGED)
     grade1: "m,uq fY%a‚h",
     grade2: "fojk fY%a‚h",
     grade3: ";=kajk fY%a‚h",
@@ -71,7 +67,6 @@ export const translations = {
     grade13: "oy;=kajk fY%a‚h",
     grade: "fY%a‚h",
 
-    // ✅ SIGN / AUTH (existing)
     signUp: ",shdmÈxÑ fjkak",
     signIn: "we;=¿ jkak",
     phoneNumber: "jÜiema wxlh",
@@ -82,7 +77,6 @@ export const translations = {
 
     requiredTitle: "wjYHhs",
 
-    // ✅ Validation messages (existing)
     errNameRequired: "ku wjYHhs'",
     errEmailRequired: "Bfï,a wjYHhs'",
     errPhoneRequired: "jÜiema wxlh wjYHhs",
@@ -92,7 +86,6 @@ export const translations = {
     errPasswordRequired: "uqrmoh wjYHhs'",
     errPasswordMin6: "uqrmohg wju wl=re ^6& la wjYhs'",
 
-    // ✅ FORGOT PASSWORD SCREEN (NEW, your legacy text)
     forgotPasswordTitle: "uqrmoh wu;lo@",
     resetPasswordTitle: "uqrmoh keje; ilikak",
 
@@ -118,7 +111,6 @@ export const translations = {
     rpSuccessManualSignin: "uqrmoh fjkia l<d' kej; we;=¿ jkak",
     rpResetFailed: "uqrmoh fjkia lsÍu wid¾:hl",
 
-    // ✅ District labels (UNCHANGED)
     districts: {
       Ampara: "wïmdr",
       Anuradhapura: "wkqrdOmqr",
@@ -170,8 +162,10 @@ export const translations = {
     Date: "Date",
     Time: "Time",
     Description: "Description",
+
     WatchNow: "Watch Now",
     Lesson: "Lesson",
+    ViewLesson: "View Lesson",
 
     islandRank: "Island Rank",
     coins: "Coins",
@@ -229,7 +223,6 @@ export const translations = {
     errPasswordRequired: "Password is required",
     errPasswordMin6: "Password must be at least 6 characters",
 
-    // ✅ FORGOT PASSWORD SCREEN (EN)
     forgotPasswordTitle: "Forgot Password",
     resetPasswordTitle: "Reset Password",
 

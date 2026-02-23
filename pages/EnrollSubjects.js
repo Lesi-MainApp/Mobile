@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react";
+// pages/EnrollSubjects.js
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -13,18 +14,16 @@ import {
 import { useNavigation } from "@react-navigation/native";
 
 import { useGetClassesByGradeAndSubjectQuery } from "../app/classApi";
-import { useGetMyEnrollRequestsQuery, useRequestEnrollMutation } from "../app/enrollApi";
+import {
+  useGetMyEnrollRequestsQuery,
+  useRequestEnrollMutation,
+} from "../app/enrollApi";
 import ClassEnrollCard from "../components/ClassEnrollCard";
 
 const numberFromGrade = (gradeLabel) => {
   if (!gradeLabel) return null;
   const match = String(gradeLabel).match(/\d+/);
   return match ? parseInt(match[0], 10) : null;
-};
-
-const gradeWord = (n) => {
-  const map = { 1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven" };
-  return map[n] || String(n);
 };
 
 export default function EnrollSubjects({ route }) {
@@ -39,12 +38,10 @@ export default function EnrollSubjects({ route }) {
   const gradeNumberParam = route?.params?.gradeNumber;
   const subjectName = route?.params?.subjectName || "";
 
-  const gradeNo = useMemo(() => Number(gradeNumberParam) || numberFromGrade(gradeLabel), [gradeNumberParam, gradeLabel]);
-
-  const pageTitle = useMemo(() => {
-    if (!gradeNo) return "Select Grade";
-    return `Grade ${gradeWord(gradeNo)}`;
-  }, [gradeNo]);
+  const gradeNo = useMemo(
+    () => Number(gradeNumberParam) || numberFromGrade(gradeLabel),
+    [gradeNumberParam, gradeLabel]
+  );
 
   const {
     data: classes = [],
@@ -56,7 +53,6 @@ export default function EnrollSubjects({ route }) {
     { skip: !gradeNo || !subjectName }
   );
 
-  // ✅ my requests to decide button text
   const {
     data: myReqData,
     isLoading: myReqLoading,
@@ -68,7 +64,7 @@ export default function EnrollSubjects({ route }) {
     const list = myReqData?.requests || [];
     for (const r of list) {
       const classId = String(r?.classId || r?.classDetails?.classId || "");
-      if (classId) map[classId] = r; // store request
+      if (classId) map[classId] = r;
     }
     return map;
   }, [myReqData]);
@@ -96,7 +92,7 @@ export default function EnrollSubjects({ route }) {
 
       setModalOpen(false);
       setSelectedClass(null);
-      refetchMyReq();
+      refetchMyReq?.();
       alert("Request sent!");
     } catch (e) {
       alert(String(e?.data?.message || e?.error || "Request failed"));
@@ -114,23 +110,16 @@ export default function EnrollSubjects({ route }) {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.pageTitle}>{pageTitle}</Text>
-      <Text style={styles.pageSub}>{subjectName}</Text>
-
       {isLoading ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
           <ActivityIndicator />
-          <Text style={{ marginTop: 10, color: "#64748B", fontWeight: "700" }}>
-            Loading classes...
-          </Text>
+          <Text style={styles.infoText}>Loading classes...</Text>
         </View>
       ) : isError ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
-          <Text style={{ color: "#0F172A", fontWeight: "900" }}>
-            Failed to load classes
-          </Text>
+          <Text style={styles.errTitle}>Failed to load classes</Text>
           <Pressable onPress={refetch} style={{ marginTop: 10 }}>
-            <Text style={{ color: "#214294", fontWeight: "900" }}>Try again</Text>
+            <Text style={styles.tryAgain}>Try again</Text>
           </Pressable>
         </View>
       ) : (
@@ -143,7 +132,13 @@ export default function EnrollSubjects({ route }) {
               <ClassEnrollCard
                 key={c._id}
                 item={c}
-                status={status === "approved" ? "approved" : status === "pending" ? "pending" : ""}
+                status={
+                  status === "approved"
+                    ? "approved"
+                    : status === "pending"
+                    ? "pending"
+                    : ""
+                }
                 onPressView={() => goLessons(c)}
                 onPressEnroll={() => openModal(c)}
               />
@@ -151,7 +146,9 @@ export default function EnrollSubjects({ route }) {
           })}
 
           {classes.length === 0 && (
-            <Text style={styles.centerInfo}>No classes available for this subject.</Text>
+            <Text style={styles.centerInfo}>
+              No classes available for this subject.
+            </Text>
           )}
         </ScrollView>
       )}
@@ -179,14 +176,16 @@ export default function EnrollSubjects({ route }) {
               style={styles.input}
             />
 
-            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 12 }}>
+            <View style={styles.modalRow}>
               <TouchableOpacity
                 onPress={() => setModalOpen(false)}
                 style={[styles.modalBtn, { backgroundColor: "#E2E8F0" }]}
                 activeOpacity={0.9}
                 disabled={submitting}
               >
-                <Text style={[styles.modalBtnText, { color: "#0F172A" }]}>Cancel</Text>
+                <Text style={[styles.modalBtnText, { color: "#0F172A" }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -202,9 +201,7 @@ export default function EnrollSubjects({ route }) {
             </View>
 
             {myReqLoading && (
-              <Text style={{ marginTop: 10, color: "#64748B", fontWeight: "800", fontSize: 12 }}>
-                Syncing status...
-              </Text>
+              <Text style={styles.syncText}>Syncing status...</Text>
             )}
           </View>
         </View>
@@ -216,15 +213,9 @@ export default function EnrollSubjects({ route }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F8FAFC", padding: 16, paddingTop: 22 },
 
-  pageTitle: { fontSize: 22, fontWeight: "900", color: "#214294", textAlign: "center" },
-  pageSub: {
-    marginTop: 6,
-    marginBottom: 16,
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#64748B",
-    textAlign: "center",
-  },
+  infoText: { marginTop: 10, color: "#64748B", fontWeight: "700" },
+  errTitle: { color: "#0F172A", fontWeight: "900" },
+  tryAgain: { color: "#214294", fontWeight: "900" },
 
   centerInfo: {
     textAlign: "center",
@@ -262,6 +253,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
 
+  modalRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 12,
+  },
+
   modalBtn: {
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -269,4 +267,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalBtnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12 },
+
+  syncText: {
+    marginTop: 10,
+    color: "#64748B",
+    fontWeight: "800",
+    fontSize: 12,
+  },
 });

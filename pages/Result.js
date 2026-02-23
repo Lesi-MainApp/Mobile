@@ -1,78 +1,75 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator } from "react-native";
 import coins from "../assets/coins.png";
+import { useGetMyCompletedPapersQuery } from "../app/attemptApi";
 
 export default function Result() {
-  const paper = {
-    title: "Past Paper - 1",
-    attempts: [
-      {
-        attempt: "1st Attempt",
-        grade: 5,
-        total: 20,
-        correct: 10,
-        percent: 50,
-        subject: "Maths",
-        coins: 10,
-      },
-    ],
-  };
+  const { data, isLoading, isError } = useGetMyCompletedPapersQuery();
+  const items = Array.isArray(data?.items) ? data.items : [];
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.pageTitle}>Recently completed papers</Text>
-
       <ScrollView contentContainerStyle={styles.list}>
-        <View style={styles.paperCard}>
-          <Text style={styles.paperTitle}>{paper.title}</Text>
+        {isLoading ? (
+          <ActivityIndicator style={{ marginTop: 20 }} />
+        ) : isError ? (
+          <Text style={{ marginTop: 20, color: "#E11D48", fontWeight: "700" }}>
+            Failed to load results
+          </Text>
+        ) : items.length === 0 ? (
+          <Text style={{ marginTop: 20, color: "#64748B", fontWeight: "700" }}>
+            No completed papers yet
+          </Text>
+        ) : (
+          items.map((paper) => {
+            // one best attempt only
+            const r = {
+              total: Number(paper.totalQuestions || 0),
+              correct: Number(paper.correct || 0),
+              percent: Number(paper.percentage || 0),
+              subject: String(paper.subject || ""),
+              coins: Number(paper.coins || 0),
+            };
 
-          {paper.attempts.map((r, idx) => (
-            <View
-              key={`${r.attempt}-${idx}`}
-              style={[
-                styles.attemptBlock,
-                idx !== paper.attempts.length - 1 && styles.blockDivider,
-              ]}
-            >
-              <Text style={styles.attemptTitle}>{r.attempt}</Text>
+            return (
+              <View key={paper.paperId} style={styles.paperCard}>
+                <Text style={styles.paperTitle}>{paper.paperTitle}</Text>
 
-              <View style={styles.twoCols}>
-                {/* Left */}
-                <View style={styles.leftCol}>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Grade : </Text>
-                    <Text style={styles.value}> {r.grade}</Text>
-                  </View>
+                <View style={styles.attemptBlock}>
+                  <View style={styles.twoCols}>
+                    {/* Left */}
+                    <View style={styles.leftCol}>
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Total : </Text>
+                        <Text style={styles.value}> {r.total}</Text>
+                      </View>
 
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Total : </Text>
-                    <Text style={styles.value}> {r.total}</Text>
-                  </View>
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Correct : </Text>
+                        <Text style={styles.value}> {r.correct}</Text>
+                      </View>
 
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Correct : </Text>
-                    <Text style={styles.value}> {r.correct}</Text>
-                  </View>
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Percentage : </Text>
+                        <Text style={styles.value}> {r.percent}%</Text>
+                      </View>
+                    </View>
 
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Percentage : </Text>
-                    <Text style={styles.value}> {r.percent}%</Text>
-                  </View>
-                </View>
+                    {/* Right */}
+                    <View style={styles.rightCol}>
+                      <Text style={styles.subjectText}>{r.subject}</Text>
 
-                {/* Right */}
-                <View style={styles.rightCol}>
-                  <Text style={styles.subjectText}>{r.subject}</Text>
-
-                  <View style={styles.coinWrap}>
-                    <Image source={coins} style={styles.coinImg} />
-                    <Text style={styles.coinCount}>{r.coins}</Text>
+                      <View style={styles.coinWrap}>
+                        <Image source={coins} style={styles.coinImg} />
+                        <Text style={styles.coinCount}>{r.coins}</Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          ))}
-        </View>
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -149,7 +146,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ✅ FIXED: no horizontal gap
   row: {
     flexDirection: "row",
     alignItems: "center",

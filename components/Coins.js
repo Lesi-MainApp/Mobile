@@ -2,10 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import coins from "../assets/coins.png";
 import useT from "../app/i18n/useT";
+import { useGetMyStatsQuery } from "../app/attemptApi";
 
 export default function Coins() {
   const { t, sinFont } = useT();
-  const coinCount = 1250;
+  const { data } = useGetMyStatsQuery();
+
+  const coinCount = Number(data?.totalCoins || 0);
 
   return (
     <View style={styles.container}>

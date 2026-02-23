@@ -1,4 +1,5 @@
-import React from "react";
+// pages/Lessons.js  ✅ FULL CODE (English only UI) + ✅ remove "ganitha gatalu" + ✅ keep dot time + ✅ sort old->new
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -9,11 +10,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useGetLessonsByClassIdQuery } from "../app/lessonApi";
-import useT from "../app/i18n/useT";
+
+const norm = (v) => String(v || "").trim().toLowerCase();
 
 export default function Lessons({ route }) {
   const navigation = useNavigation();
-  const { t, sinFont } = useT();
 
   // coming from EnrollSubjects page
   const classId = route?.params?.classId || "";
@@ -28,6 +29,41 @@ export default function Lessons({ route }) {
     isError,
     refetch,
   } = useGetLessonsByClassIdQuery(classId, { skip: !classId });
+
+  // ✅ keep dot time always (15:28 -> 15.28) + avoid Sinhala "ඃ"
+  const timeWithDot = (v) =>
+    String(v || "")
+      .trim()
+      .replace(/[：:ඃ]/g, ".")
+      .replace(/\s+/g, "");
+
+  // ✅ REMOVE subject text if it is "Maths" / "math" / "ganitha gatalu"
+  const subjectToShow = useMemo(() => {
+    const s = String(subject || "").trim();
+    const n = norm(s).replace(/\s+/g, " "); // normalize double spaces
+    if (!s) return "";
+    if (n === "maths" || n === "math" || n === "ganitha gatalu") return "";
+    return s;
+  }, [subject]);
+
+  // ✅ order lessons: older date -> current date (ascending)
+  const sortedLessons = useMemo(() => {
+    const toMs = (d) => {
+      const dt = new Date(String(d || "").trim());
+      const ms = dt.getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    };
+
+    return [...(lessons || [])].sort((a, b) => {
+      const da = toMs(a?.date);
+      const db = toMs(b?.date);
+      if (da !== db) return da - db;
+
+      const ta = timeWithDot(a?.time);
+      const tb = timeWithDot(b?.time);
+      return ta.localeCompare(tb);
+    });
+  }, [lessons]);
 
   const onWatchNow = (lesson, index) => {
     navigation.navigate("ViewLesson", {
@@ -50,75 +86,45 @@ export default function Lessons({ route }) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      {!!className && (
-        <Text style={[styles.pageTitle, sinFont("bold")]}>{className}</Text>
-      )}
-      {!!subject && (
-        <Text style={[styles.pageSub, sinFont("regular")]}>{subject}</Text>
-      )}
+      {!!className && <Text style={styles.pageTitle}>{className}</Text>}
+      {!!subjectToShow && <Text style={styles.pageSub}>{subjectToShow}</Text>}
 
       {!classId ? (
-        <Text style={[styles.centerInfo, sinFont("bold")]}>
-          {t("missingClassId")}
-        </Text>
+        <Text style={styles.centerInfo}>Missing classId</Text>
       ) : isLoading ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
           <ActivityIndicator />
-          <Text style={[styles.infoText, sinFont("regular")]}>
-            {t("loadingLessons")}
-          </Text>
+          <Text style={styles.infoText}>Loading lessons...</Text>
         </View>
       ) : isError ? (
         <View style={{ paddingTop: 30, alignItems: "center" }}>
-          <Text style={[styles.errTitle, sinFont("bold")]}>
-            {t("failedLoadLessons")}
-          </Text>
+          <Text style={styles.errTitle}>Failed to load lessons</Text>
 
-          <Pressable
-            onPress={() => refetch?.()}
-            style={{ marginTop: 10 }}
-          >
-            <Text style={[styles.tryAgain, sinFont("bold")]}>
-              {t("tryAgain")}
-            </Text>
+          <Pressable onPress={() => refetch?.()} style={{ marginTop: 10 }}>
+            <Text style={styles.tryAgain}>Try again</Text>
           </Pressable>
         </View>
-      ) : lessons.length === 0 ? (
-        <Text style={[styles.centerInfo, sinFont("bold")]}>
-          {t("noLessons")}
-        </Text>
+      ) : sortedLessons.length === 0 ? (
+        <Text style={styles.centerInfo}>No lessons available.</Text>
       ) : (
-        lessons.map((lesson, idx) => (
+        sortedLessons.map((lesson, idx) => (
           <View style={styles.card} key={lesson?._id || String(idx)}>
-            <Text style={[styles.lessonNo, sinFont("bold")]}>
-              {t("Lesson")} {idx + 1}
-            </Text>
+            <Text style={styles.lessonNo}>Lesson {idx + 1}</Text>
 
-            {/* Title (Sinhala font) */}
-            <Text
-              style={[styles.titleFm, sinFont("regular")]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
+            <Text style={styles.titleFm} numberOfLines={1} ellipsizeMode="tail">
               {lesson?.title || ""}
             </Text>
 
             <View style={styles.metaRow}>
-              <Text style={[styles.metaText, sinFont("regular")]}>
-                {t("Date")} : {lesson?.date || "-"}
-              </Text>
-              <Text style={[styles.metaText, sinFont("regular")]}>
-                {t("Time")} : {lesson?.time || "-"}
+              <Text style={styles.metaText}>Date {lesson?.date || "-"}</Text>
+              <Text style={styles.metaText}>
+                Time {timeWithDot(lesson?.time) || "-"}
               </Text>
             </View>
 
             <View style={styles.descWrap}>
-              <Text style={[styles.descLabel, sinFont("bold")]}>
-                {t("Description")} :
-              </Text>
-              <Text style={[styles.descFm, sinFont("regular")]}>
-                {lesson?.description || ""}
-              </Text>
+              <Text style={styles.descLabel}>Description</Text>
+              <Text style={styles.descFm}>{lesson?.description || ""}</Text>
             </View>
 
             <View style={styles.bottomRow}>
@@ -126,9 +132,7 @@ export default function Lessons({ route }) {
                 style={styles.watchBtn}
                 onPress={() => onWatchNow(lesson, idx)}
               >
-                <Text style={[styles.watchText, sinFont("bold")]}>
-                  {t("WatchNow")}
-                </Text>
+                <Text style={styles.watchText}>Watch Now</Text>
               </Pressable>
             </View>
           </View>

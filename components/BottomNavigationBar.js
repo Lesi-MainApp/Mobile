@@ -1,8 +1,7 @@
 // components/BottomNavigationBar.js
-
 import React from "react";
 import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useNavigationState } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 
@@ -14,14 +13,26 @@ const BAR_HEIGHT = 64;
 
 const ICON_COLOR = "#1153ec";
 
+// ✅ hide only on EnrollSubjects (Registersubject WILL SHOW)
+const HIDE_BOTTOM_BAR_ON = new Set(["EnrollSubjects"]);
+
 export default function BottomNavigationBar() {
   const navigation = useNavigation();
   const { t, navFont } = useT();
 
-  const user = useSelector((s) => s?.user?.user) || useSelector((s) => s?.auth?.user);
+  // ✅ hooks first
+  const currentRouteName = useNavigationState(
+    (state) => state.routes[state.index]?.name
+  );
+
+  const user =
+    useSelector((s) => s?.user?.user) || useSelector((s) => s?.auth?.user);
 
   const level = user?.selectedLevel || user?.level || null;
   const showLMS = level !== "al";
+
+  // ✅ hide after hooks
+  if (HIDE_BOTTOM_BAR_ON.has(currentRouteName)) return null;
 
   return (
     <View style={styles.root}>
@@ -50,11 +61,12 @@ export default function BottomNavigationBar() {
             onPress={() => navigation.navigate("Result")}
           />
 
+          {/* ✅ Bottom bar Enroll button goes ONLY to Registersubject */}
           <NavItem
             icon="clipboard"
             label={t("navEnroll")}
             labelStyle={navFont("bold")}
-            onPress={() => navigation.navigate("EnrollSubjects")}
+            onPress={() => navigation.navigate("Registersubject")}
           />
         </View>
       </View>
@@ -62,10 +74,15 @@ export default function BottomNavigationBar() {
       {showLMS && (
         <Pressable
           onPress={() => navigation.navigate("LMS")}
-          style={({ pressed }) => [styles.centerButton, pressed && styles.centerPressed]}
+          style={({ pressed }) => [
+            styles.centerButton,
+            pressed && styles.centerPressed,
+          ]}
         >
           <Ionicons name="school" size={36} color={ICON_COLOR} />
-          <Text style={[styles.centerLabel, navFont("bold")]}>{t("navLms")}</Text>
+          <Text style={[styles.centerLabel, navFont("bold")]}>
+            {t("navLms")}
+          </Text>
         </Pressable>
       )}
     </View>
@@ -110,9 +127,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  barNoLms: {
-    paddingHorizontal: 6,
-  },
+  barNoLms: { paddingHorizontal: 6 },
 
   item: {
     flex: 1,
@@ -120,9 +135,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  slotCenter: {
-    width: LMS_SIZE,
-  },
+  slotCenter: { width: LMS_SIZE },
 
   text: {
     marginTop: 2,
@@ -148,9 +161,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 
-  centerPressed: {
-    opacity: Platform.OS === "ios" ? 0.85 : 1,
-  },
+  centerPressed: { opacity: Platform.OS === "ios" ? 0.85 : 1 },
 
   centerLabel: {
     marginTop: 2,

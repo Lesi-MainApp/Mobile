@@ -1,3 +1,4 @@
+// Layouts/SecondLayout.js
 import React from "react";
 import { View, StyleSheet, SafeAreaView } from "react-native";
 import BottomNavigationBar from "../components/BottomNavigationBar";
@@ -12,7 +13,7 @@ export default function SecondLayout({ children }) {
         {/* ✅ Screen Content */}
         <View style={styles.content}>{children}</View>
 
-        {/* ✅ Bottom bar (wrapper is transparent, screen bg shows through) */}
+        {/* ✅ Bottom bar */}
         <BottomNavigationBar />
       </View>
     </SafeAreaView>
@@ -22,12 +23,12 @@ export default function SecondLayout({ children }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#F8FAFC", // ✅ full screen color
+    backgroundColor: "#F8FAFC",
   },
 
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC", // ✅ full screen color
+    backgroundColor: "#F8FAFC",
   },
 
   content: {
