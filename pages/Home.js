@@ -18,11 +18,23 @@ import PaperGrid from "../components/PaperGrid";
 
 import useT from "../app/i18n/useT";
 
+// ✅ NEW
+import { useGetMyProgressQuery } from "../app/progressApi";
+
 const { height } = Dimensions.get("window");
 const TAB_BAR_HEIGHT = 90;
 
 export default function Home() {
   const { t, sinFont } = useT();
+
+  // ✅ time-to-time update (polling)
+  const { data } = useGetMyProgressQuery(undefined, {
+    pollingInterval: 20000, // every 20 seconds
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
+
+  const progress = Number(data?.progress || 0); // 0..1
 
   return (
     <SafeAreaView style={styles.safe} edges={["left", "right"]}>
@@ -49,11 +61,13 @@ export default function Home() {
             </View>
 
             <View style={styles.progressWrapper}>
-              <ProgressBar progress={0.65} />
+              {/* ✅ same design, just pass backend progress */}
+              <ProgressBar progress={progress} />
             </View>
 
-            {/* ✅ Only add sinFont, keep your style */}
-            <Text style={[styles.sectionTitle, sinFont("bold")]}>{t("paperLibrary")}</Text>
+            <Text style={[styles.sectionTitle, sinFont("bold")]}>
+              {t("paperLibrary")}
+            </Text>
 
             <View style={styles.gridWrapper}>
               <PaperGrid />
@@ -84,7 +98,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginLeft: 16,
     fontSize: 18,
-    fontWeight: "700", // ✅ ok, Sinhala will be forced to normal by sinFont()
+    fontWeight: "700",
     color: "#0F172A",
   },
 

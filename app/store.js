@@ -1,4 +1,3 @@
-// src/app/store.js
 import { configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "./features/authSlice";
@@ -14,6 +13,11 @@ import paperReducer from "./features/paperSlice";
 import languageSelectionReducer from "./features/languageSelectionSlice";
 import rankReducer from "./features/rankSlice";
 import { rankApi } from "./rankApi";
+
+// ✅ NEW progress
+import progressReducer from "./features/progressSlice";
+import { progressApi } from "./progressApi";
+
 // RTK Query apis
 import { attemptApi } from "./attemptApi";
 import { liveApi } from "./liveApi";
@@ -39,6 +43,9 @@ const store = configureStore({
     rank: rankReducer,
     languageSelection: languageSelectionReducer,
 
+    // ✅ progress state
+    progress: progressReducer,
+
     // ✅ RTK Query reducers
     [paymentApi.reducerPath]: paymentApi.reducer,
     [attemptApi.reducerPath]: attemptApi.reducer,
@@ -51,11 +58,13 @@ const store = configureStore({
     [paperApi.reducerPath]: paperApi.reducer,
     [liveApi.reducerPath]: liveApi.reducer,
     [rankApi.reducerPath]: rankApi.reducer,
+
+    // ✅ progress api reducer
+    [progressApi.reducerPath]: progressApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
-      // ✅ RTK Query middlewares
       authApi.middleware,
       attemptApi.middleware,
       gradeApi.middleware,
@@ -66,7 +75,10 @@ const store = configureStore({
       paperApi.middleware,
       liveApi.middleware,
       paymentApi.middleware,
-      rankApi.middleware
+      rankApi.middleware,
+
+      // ✅ progress middleware
+      progressApi.middleware
     ),
 });
 

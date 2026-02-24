@@ -1,4 +1,3 @@
-// app/attemptApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { BASE_URL } from "./api/api";
 
@@ -30,11 +29,21 @@ export const attemptApi = createApi({
       }),
     }),
 
+    // ✅ supports multi or single
     saveAnswer: builder.mutation({
-      query: ({ attemptId, questionId, selectedAnswerIndex }) => ({
+      query: ({ attemptId, questionId, selectedAnswerIndex, selectedAnswerIndexes }) => ({
         url: `/answer`,
         method: "POST",
-        body: { attemptId, questionId, selectedAnswerIndex },
+        body: {
+          attemptId,
+          questionId,
+
+          // multi (new)
+          selectedAnswerIndexes: Array.isArray(selectedAnswerIndexes) ? selectedAnswerIndexes : undefined,
+
+          // single (old)
+          selectedAnswerIndex: typeof selectedAnswerIndex === "number" ? selectedAnswerIndex : undefined,
+        },
       }),
     }),
 
@@ -66,7 +75,6 @@ export const attemptApi = createApi({
       }),
     }),
 
-    // ✅ BEST result per paper
     getMyCompletedPapers: builder.query({
       query: () => ({
         url: `/completed`,
@@ -78,7 +86,7 @@ export const attemptApi = createApi({
       },
     }),
 
-    // ✅ NEW: totals for dashboard boxes
+    // ✅ Coins box + Finished exams box
     getMyStats: builder.query({
       query: () => ({
         url: `/stats`,
@@ -106,6 +114,5 @@ export const {
 
   useGetMyCompletedPapersQuery,
 
-  // ✅ NEW
   useGetMyStatsQuery,
 } = attemptApi;

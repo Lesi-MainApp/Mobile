@@ -86,14 +86,7 @@ export default function TopBar() {
           <Ionicons name="person-circle-outline" size={30} color="#1153ec" />
         </Pressable>
 
-        {/* Logout */}
-        <Pressable onPress={goLogout} hitSlop={10} style={styles.logoutBtn}>
-          <Ionicons name="log-out-outline" size={22} color="#1153ec" />
-          <View style={{ width: 6 }} />
-          <View>
-            {/* small text style like button */}
-          </View>
-        </Pressable>
+       
       </View>
     </View>
   );

@@ -195,19 +195,13 @@ export default function ReviewPage({ navigation, route }) {
             ) : null}
           </View>
 
-          <Text style={styles.scoreMeta}>
-            {correctCount}/{total} correct • {title}
-          </Text>
-
-          <Text style={styles.attemptMeta}>
-            Attempt {attemptNo}/{attemptsAllowed} • {Math.max(attemptsLeft, 0)} left
-          </Text>
+          
         </View>
 
         {wrongFirst.length > 0 ? (
           <Text style={styles.sectionTitle}>Wrong Answers (Review First)</Text>
         ) : (
-          <Text style={styles.sectionTitle}>No wrong answers 🎉</Text>
+          <Text style={styles.sectionTitle}>No wrong answers </Text>
         )}
 
         <FlatList
