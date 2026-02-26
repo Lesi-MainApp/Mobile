@@ -1,4 +1,4 @@
-// pages/Lessons.js  ✅ FULL CODE (English only UI) + ✅ remove "ganitha gatalu" + ✅ keep dot time + ✅ sort old->new
+// pages/Lessons.js
 import React, { useMemo } from "react";
 import {
   View,
@@ -11,12 +11,15 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useGetLessonsByClassIdQuery } from "../app/lessonApi";
 
-const norm = (v) => String(v || "").trim().toLowerCase();
+const cleanDisplayText = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return raw.replace(/\s+/g, " ").trim();
+};
 
 export default function Lessons({ route }) {
   const navigation = useNavigation();
 
-  // coming from EnrollSubjects page
   const classId = route?.params?.classId || "";
   const className = route?.params?.className || "";
   const grade = route?.params?.grade || "";
@@ -30,23 +33,12 @@ export default function Lessons({ route }) {
     refetch,
   } = useGetLessonsByClassIdQuery(classId, { skip: !classId });
 
-  // ✅ keep dot time always (15:28 -> 15.28) + avoid Sinhala "ඃ"
   const timeWithDot = (v) =>
     String(v || "")
       .trim()
       .replace(/[：:ඃ]/g, ".")
       .replace(/\s+/g, "");
 
-  // ✅ REMOVE subject text if it is "Maths" / "math" / "ganitha gatalu"
-  const subjectToShow = useMemo(() => {
-    const s = String(subject || "").trim();
-    const n = norm(s).replace(/\s+/g, " "); // normalize double spaces
-    if (!s) return "";
-    if (n === "maths" || n === "math" || n === "ganitha gatalu") return "";
-    return s;
-  }, [subject]);
-
-  // ✅ order lessons: older date -> current date (ascending)
   const sortedLessons = useMemo(() => {
     const toMs = (d) => {
       const dt = new Date(String(d || "").trim());
@@ -69,13 +61,11 @@ export default function Lessons({ route }) {
     navigation.navigate("ViewLesson", {
       lessonId: lesson?._id,
       lessonNo: index + 1,
-
       title: lesson?.title || "",
       date: lesson?.date || "",
       time: lesson?.time || "",
       description: lesson?.description || "",
       youtubeUrl: lesson?.youtubeUrl || "",
-
       classId,
       className,
       grade,
@@ -86,167 +76,265 @@ export default function Lessons({ route }) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      {!!className && <Text style={styles.pageTitle}>{className}</Text>}
-      {!!subjectToShow && <Text style={styles.pageSub}>{subjectToShow}</Text>}
+      
 
       {!classId ? (
-        <Text style={styles.centerInfo}>Missing classId</Text>
+        <Text style={styles.centerInfo}>Missing class</Text>
       ) : isLoading ? (
-        <View style={{ paddingTop: 30, alignItems: "center" }}>
-          <ActivityIndicator />
+        <View style={styles.stateWrap}>
+          <ActivityIndicator size="small" color="#2563EB" />
           <Text style={styles.infoText}>Loading lessons...</Text>
         </View>
       ) : isError ? (
-        <View style={{ paddingTop: 30, alignItems: "center" }}>
+        <View style={styles.stateWrap}>
           <Text style={styles.errTitle}>Failed to load lessons</Text>
-
-          <Pressable onPress={() => refetch?.()} style={{ marginTop: 10 }}>
+          <Pressable onPress={() => refetch?.()} style={styles.retryBtn}>
             <Text style={styles.tryAgain}>Try again</Text>
           </Pressable>
         </View>
       ) : sortedLessons.length === 0 ? (
         <Text style={styles.centerInfo}>No lessons available.</Text>
       ) : (
-        sortedLessons.map((lesson, idx) => (
-          <View style={styles.card} key={lesson?._id || String(idx)}>
-            <Text style={styles.lessonNo}>Lesson {idx + 1}</Text>
+        sortedLessons.map((lesson, idx) => {
+          const lessonTitle =
+            cleanDisplayText(lesson?.title) || `Lesson ${idx + 1}`;
+          const lessonDescription =
+            cleanDisplayText(lesson?.description) || "No description available.";
 
-            <Text style={styles.titleFm} numberOfLines={1} ellipsizeMode="tail">
-              {lesson?.title || ""}
-            </Text>
+          return (
+            <View style={styles.card} key={lesson?._id || String(idx)}>
+              <View style={styles.headerRow}>
+                <View style={styles.lessonBadge}>
+                  <Text style={styles.lessonBadgeText}>Lesson {idx + 1}</Text>
+                </View>
 
-            <View style={styles.metaRow}>
-              <Text style={styles.metaText}>Date {lesson?.date || "-"}</Text>
-              <Text style={styles.metaText}>
-                Time {timeWithDot(lesson?.time) || "-"}
-              </Text>
+                <View style={styles.metaWrap}>
+                  <View style={styles.metaBox}>
+                    <Text style={styles.metaLabel}>Date</Text>
+                    <Text style={styles.metaValue}>{lesson?.date || "-"}</Text>
+                  </View>
+
+                  <View style={styles.metaBox}>
+                    <Text style={styles.metaLabel}>Time</Text>
+                    <Text style={styles.metaValue}>
+                      {timeWithDot(lesson?.time) || "-"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={styles.lessonTitle}>{lessonTitle}</Text>
+
+              <View style={styles.divider} />
+
+              <View style={styles.descCard}>
+                <Text style={styles.descLabel}>Description</Text>
+                <Text style={styles.descText}>{lessonDescription}</Text>
+              </View>
+
+              <View style={styles.buttonRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.watchBtn,
+                    pressed && styles.watchBtnPressed,
+                  ]}
+                  onPress={() => onWatchNow(lesson, idx)}
+                >
+                  <Text style={styles.watchText}>Watch Now</Text>
+                </Pressable>
+              </View>
             </View>
-
-            <View style={styles.descWrap}>
-              <Text style={styles.descLabel}>Description</Text>
-              <Text style={styles.descFm}>{lesson?.description || ""}</Text>
-            </View>
-
-            <View style={styles.bottomRow}>
-              <Pressable
-                style={styles.watchBtn}
-                onPress={() => onWatchNow(lesson, idx)}
-              >
-                <Text style={styles.watchText}>Watch Now</Text>
-              </Pressable>
-            </View>
-          </View>
-        ))
+          );
+        })
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F8FAFC" },
-  content: { padding: 16, paddingBottom: 120 },
+  screen: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+  },
+
+  content: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 120,
+  },
 
   pageTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: "#214294",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  pageSub: {
-    fontSize: 12,
+    fontSize: 22,
     fontWeight: "800",
-    color: "#64748B",
+    color: "#0F172A",
     textAlign: "center",
-    marginBottom: 14,
+    marginBottom: 16,
+    letterSpacing: 0.2,
+  },
+
+  stateWrap: {
+    paddingTop: 30,
+    alignItems: "center",
+  },
+
+  infoText: {
+    marginTop: 10,
+    color: "#64748B",
+    fontWeight: "600",
+    fontSize: 13,
+  },
+
+  errTitle: {
+    color: "#0F172A",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  retryBtn: {
+    marginTop: 10,
+  },
+
+  tryAgain: {
+    color: "#2563EB",
+    fontWeight: "700",
+    fontSize: 13,
   },
 
   centerInfo: {
     textAlign: "center",
-    marginTop: 25,
+    marginTop: 24,
     color: "#64748B",
-    fontWeight: "800",
+    fontWeight: "600",
+    fontSize: 14,
   },
-
-  infoText: { marginTop: 10, color: "#64748B", fontWeight: "700" },
-  errTitle: { color: "#0F172A", fontWeight: "900" },
-  tryAgain: { color: "#214294", fontWeight: "900" },
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 22,
     padding: 16,
     marginBottom: 14,
-    elevation: 6,
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
 
-  lessonNo: {
-    textAlign: "center",
-    fontSize: 19,
-    fontWeight: "900",
-    color: "#1F5EEB",
-    marginBottom: 8,
-  },
-
-  titleFm: {
-    fontSize: 17,
-    color: "#0F172A",
-    marginBottom: 8,
-    lineHeight: 20,
-    flexShrink: 1,
-    fontWeight: "700",
-  },
-
-  metaRow: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    alignItems: "flex-start",
     gap: 10,
   },
 
-  metaText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#475569",
-    flexShrink: 1,
+  lessonBadge: {
+    backgroundColor: "#DBEAFE",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
   },
 
-  descWrap: { marginTop: 2 },
+  lessonBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#1D4ED8",
+  },
+
+  metaWrap: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  metaBox: {
+    minWidth: 84,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#D9E2EC",
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    alignItems: "center",
+  },
+
+  metaLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#64748B",
+    marginBottom: 3,
+  },
+
+  metaValue: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+
+  lessonTitle: {
+    marginTop: 14,
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#0F172A",
+    lineHeight: 28,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#E2E8F0",
+    marginTop: 14,
+    marginBottom: 14,
+  },
+
+  descCard: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#D9E2EC",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
 
   descLabel: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 2,
-  },
-
-  descFm: {
-    fontSize: 15,
-    color: "#64748B",
-    lineHeight: 18,
     fontWeight: "700",
+    color: "#334155",
+    marginBottom: 6,
   },
 
-  bottomRow: {
-    marginTop: 10,
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  descText: {
+    fontSize: 15,
+    fontWeight: "400",
+    color: "#475569",
+    lineHeight: 22,
+  },
+
+  buttonRow: {
+    marginTop: 14,
+    alignItems: "flex-end",
   },
 
   watchBtn: {
-    backgroundColor: "#1F5EEB",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
+    backgroundColor: "#2563EB",
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 14,
+    minWidth: 122,
+    alignItems: "center",
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+
+  watchBtnPressed: {
+    opacity: 0.9,
   },
 
   watchText: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

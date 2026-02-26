@@ -111,22 +111,25 @@ export default function EnrollSubjects({ route }) {
   return (
     <View style={styles.screen}>
       {isLoading ? (
-        <View style={{ paddingTop: 30, alignItems: "center" }}>
+        <View style={styles.stateWrap}>
           <ActivityIndicator />
           <Text style={styles.infoText}>Loading classes...</Text>
         </View>
       ) : isError ? (
-        <View style={{ paddingTop: 30, alignItems: "center" }}>
+        <View style={styles.stateWrap}>
           <Text style={styles.errTitle}>Failed to load classes</Text>
-          <Pressable onPress={refetch} style={{ marginTop: 10 }}>
+          <Pressable onPress={refetch} style={styles.retryWrap}>
             <Text style={styles.tryAgain}>Try again</Text>
           </Pressable>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           {classes.map((c) => {
             const req = myReqMap[String(c._id)];
-            const status = req?.status || ""; // pending | approved | rejected | ""
+            const status = req?.status || "";
 
             return (
               <ClassEnrollCard
@@ -153,7 +156,6 @@ export default function EnrollSubjects({ route }) {
         </ScrollView>
       )}
 
-      {/* ✅ ENROLL MODAL */}
       <Modal visible={modalOpen} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
@@ -211,11 +213,41 @@ export default function EnrollSubjects({ route }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F8FAFC", padding: 16, paddingTop: 22 },
+  screen: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    padding: 16,
+    paddingTop: 22,
+  },
 
-  infoText: { marginTop: 10, color: "#64748B", fontWeight: "700" },
-  errTitle: { color: "#0F172A", fontWeight: "900" },
-  tryAgain: { color: "#214294", fontWeight: "900" },
+  stateWrap: {
+    paddingTop: 30,
+    alignItems: "center",
+  },
+
+  retryWrap: {
+    marginTop: 10,
+  },
+
+  scrollContent: {
+    paddingBottom: 24,
+  },
+
+  infoText: {
+    marginTop: 10,
+    color: "#64748B",
+    fontWeight: "700",
+  },
+
+  errTitle: {
+    color: "#0F172A",
+    fontWeight: "900",
+  },
+
+  tryAgain: {
+    color: "#214294",
+    fontWeight: "900",
+  },
 
   centerInfo: {
     textAlign: "center",
@@ -231,6 +263,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 18,
   },
+
   modalCard: {
     width: "100%",
     maxWidth: 360,
@@ -238,8 +271,19 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
   },
-  modalTitle: { fontSize: 16, fontWeight: "900", color: "#0F172A" },
-  modalText: { marginTop: 6, fontSize: 12, fontWeight: "700", color: "#475569" },
+
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+
+  modalText: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#475569",
+  },
 
   input: {
     marginTop: 10,
@@ -266,7 +310,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  modalBtnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12 },
+
+  modalBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "900",
+    fontSize: 12,
+  },
 
   syncText: {
     marginTop: 10,

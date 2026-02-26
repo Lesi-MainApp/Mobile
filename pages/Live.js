@@ -42,17 +42,15 @@ const formatTime = (iso) => {
 export default function Live() {
   const { data, isLoading, isFetching, error, refetch } = useGetStudentLivesQuery();
 
-  // backend returns: { count, lives: [...] }
   const lives = useMemo(() => {
     const list = data?.lives || [];
     const now = Date.now();
 
-    // ✅ Hide if more than 24h passed since scheduledAt
     return list
       .filter((x) => {
         const t = new Date(x?.scheduledAt).getTime();
         if (!t || Number.isNaN(t)) return false;
-        return now - t <= ONE_DAY_MS; // still valid
+        return now - t <= ONE_DAY_MS;
       })
       .sort(
         (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
@@ -67,66 +65,92 @@ export default function Live() {
 
   if (isLoading) {
     return (
-      <View style={[styles.screen, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.screen, styles.centerWrap]}>
+        <ActivityIndicator size="large" color="#DC2626" />
+        <Text style={styles.stateText}>Loading live classes...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.screen}>
-        <Text style={{ fontWeight: "800", color: "#0F172A" }}>Failed to load lives</Text>
-        <Pressable onPress={refetch} style={{ marginTop: 10 }}>
-          <Text style={{ color: "#1F5EEB", fontWeight: "800" }}>Retry</Text>
-        </Pressable>
+      <View style={[styles.screen, styles.centerWrap]}>
+        <View style={styles.stateCard}>
+          <Text style={styles.errorTitle}>Failed to load live classes</Text>
+          <Pressable onPress={refetch} style={styles.retryBtn}>
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.screen}>
+      <Text style={styles.pageTitle}>Live Classes</Text>
+
       {isFetching ? (
-        <View style={{ paddingBottom: 10 }}>
-          <Text style={{ color: "#64748B", fontWeight: "700" }}>Refreshing...</Text>
+        <View style={styles.refreshWrap}>
+          <Text style={styles.refreshText}>Refreshing...</Text>
         </View>
       ) : null}
 
       {lives.length === 0 ? (
-        <Text style={{ color: "#64748B", fontWeight: "700" }}>No live classes right now.</Text>
-      ) : null}
+        <View style={styles.emptyWrap}>
+          <Text style={styles.emptyText}>No live classes right now.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={lives}
+          keyExtractor={(item) => String(item?._id)}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => {
+            const title = item?.title || "Live Class";
+            const teacher = item?.teacherNames?.[0] || "Teacher";
+            const dateText = formatDate(item?.scheduledAt);
+            const timeText = formatTime(item?.scheduledAt);
 
-      <FlatList
-        data={lives}
-        keyExtractor={(item) => String(item?._id)}
-        contentContainerStyle={{ paddingBottom: 40, gap: 12 }}
-        renderItem={({ item }) => {
-          const title = item?.title || "Live Class";
-          const teacher = item?.teacherNames?.[0]
-            ? `- ${item.teacherNames[0]}`
-            : "- Teacher";
-          const dateText = formatDate(item?.scheduledAt);
-          const timeText = formatTime(item?.scheduledAt);
+            return (
+              <View style={styles.card}>
+                <View style={styles.headerRow}>
+                  <View style={styles.headerLeft}>
+                    <Text style={styles.title} numberOfLines={1}>
+                      {title}
+                    </Text>
+                    <Text style={styles.teacher} numberOfLines={1}>
+                      {teacher}
+                    </Text>
+                  </View>
 
-          return (
-            <View style={styles.card}>
-              <View style={styles.topRow}>
-                <Text style={styles.title}>{title}</Text>
-                <Text style={styles.teacher}>{teacher}</Text>
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.liveBadgeText}>LIVE</Text>
+                  </View>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <View style={styles.infoItem}>
+                    <Text style={styles.infoLabel}>Date</Text>
+                    <Text style={styles.infoValue}>{dateText || "-"}</Text>
+                  </View>
+
+                  <View style={styles.infoDivider} />
+
+                  <View style={styles.infoItem}>
+                    <Text style={styles.infoLabel}>Time</Text>
+                    <Text style={styles.infoValue}>{timeText || "-"}</Text>
+                  </View>
+                </View>
+
+                <Pressable style={styles.joinBtn} onPress={() => onJoin(item?.zoomLink)}>
+                  <Text style={styles.joinBtnText}>Join Class</Text>
+                </Pressable>
               </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.meta}>Date : {dateText || "-"}</Text>
-                <Text style={styles.meta}>Time : {timeText || "-"}</Text>
-              </View>
-
-              <Pressable style={styles.btn} onPress={() => onJoin(item?.zoomLink)}>
-                <Text style={styles.btnText}>Join Now</Text>
-              </Pressable>
-            </View>
-          );
-        }}
-      />
+            );
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -139,63 +163,202 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
 
-  card: {
-    width: "100%",
-    height: 130,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-  },
-
-  topRow: {
-    flexDirection: "row",
+  centerWrap: {
+    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
   },
 
-  title: {
+  pageTitle: {
+    textAlign: "center",
     fontSize: 18,
-    fontWeight: "800",
-    color: "#0F172A",
+    fontWeight: "900",
+    color: "#DC2626",
+    marginBottom: 14,
   },
 
-  teacher: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#475569",
+  refreshWrap: {
+    alignItems: "center",
+    marginBottom: 10,
   },
 
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 6,
-  },
-
-  meta: {
+  refreshText: {
     fontSize: 12,
     fontWeight: "700",
     color: "#64748B",
   },
 
-  btn: {
-    alignSelf: "center",
-    backgroundColor: "#1F5EEB",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginTop: 15,
+  stateText: {
+    marginTop: 12,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748B",
   },
 
-  btnText: {
+  stateCard: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 18,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+
+  errorTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0F172A",
+    textAlign: "center",
+  },
+
+  retryBtn: {
+    marginTop: 12,
+    backgroundColor: "#DC2626",
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+
+  retryBtnText: {
     color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "800",
+  },
+
+  emptyWrap: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+
+  emptyText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#64748B",
+    textAlign: "center",
+  },
+
+  listContent: {
+    paddingBottom: 120,
+  },
+
+  card: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  headerLeft: {
+    flex: 1,
+    paddingRight: 8,
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+
+  teacher: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+
+  liveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "#DC2626",
+    marginRight: 6,
+  },
+
+  liveBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#DC2626",
+    letterSpacing: 0.5,
+  },
+
+  infoRow: {
+    marginTop: 16,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+
+  infoItem: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+
+  infoDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: "#E2E8F0",
+  },
+
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#64748B",
+    marginBottom: 4,
+  },
+
+  infoValue: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+
+  joinBtn: {
+    alignSelf: "center",
+    minWidth: 150,
+    backgroundColor: "#DC2626",
+    borderRadius: 12,
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  joinBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "900",
   },
 });

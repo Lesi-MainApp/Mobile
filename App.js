@@ -37,7 +37,7 @@ import ModelPaper from "./pages/Modelpaper";
 import PastPapers from "./pages/Pastpapers";
 
 import EnrollSubjects from "./pages/EnrollSubjects";
-import Registersubject from "./pages/Registersubject"; // ✅ NEW FILE (Completed Papers)
+import Registersubject from "./pages/Registersubject";
 
 import DailyQuizMenu from "./pages/DailyQuizzMenu";
 import TopicWiseMenu from "./pages/TopicWisemenu";
@@ -73,7 +73,7 @@ const SubjectsWithLayout = withSecondLayout(Subjects);
 const SubjectWithTeachersWithLayout = withSecondLayout(SubjectWithTeachers);
 
 const EnrollSubjectsWithLayout = withSecondLayout(EnrollSubjects);
-const RegistersubjectWithLayout = withSecondLayout(Registersubject); // ✅ SecondLayout
+const RegistersubjectWithLayout = withSecondLayout(Registersubject);
 
 const DailyQuizWithLayout = withSecondLayout(DailyQuiz);
 const TopicWisePaperWithLayout = withSecondLayout(TopicWisePaper);
@@ -145,13 +145,12 @@ export default function App() {
             <Stack.Screen name="Lessons" component={LessonsWithLayout} />
             <Stack.Screen name="ViewLesson" component={ViewLessonWithLayout} />
 
-            {/* ✅ EnrollSubjects = separate page (HIDE bottom bar there) */}
+            {/* Enroll page with bottom bar */}
             <Stack.Screen
               name="EnrollSubjects"
               component={EnrollSubjectsWithLayout}
             />
 
-            {/* ✅ Registersubject = Completed Papers page (SHOW bottom bar here) */}
             <Stack.Screen
               name="Registersubject"
               component={RegistersubjectWithLayout}

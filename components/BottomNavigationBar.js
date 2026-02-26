@@ -13,8 +13,8 @@ const BAR_HEIGHT = 64;
 
 const ICON_COLOR = "#1153ec";
 
-// ✅ hide only on EnrollSubjects (Registersubject WILL SHOW)
-const HIDE_BOTTOM_BAR_ON = new Set(["EnrollSubjects"]);
+// ✅ Do not hide on EnrollSubjects now
+const HIDE_BOTTOM_BAR_ON = new Set([]);
 
 export default function BottomNavigationBar() {
   const navigation = useNavigation();
@@ -127,7 +127,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  barNoLms: { paddingHorizontal: 6 },
+  barNoLms: {
+    paddingHorizontal: 6,
+  },
 
   item: {
     flex: 1,
@@ -135,7 +137,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  slotCenter: { width: LMS_SIZE },
+  slotCenter: {
+    width: LMS_SIZE,
+  },
 
   text: {
     marginTop: 2,
@@ -153,7 +157,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-
     elevation: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
@@ -161,7 +164,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 
-  centerPressed: { opacity: Platform.OS === "ios" ? 0.85 : 1 },
+  centerPressed: {
+    opacity: Platform.OS === "ios" ? 0.85 : 1,
+  },
 
   centerLabel: {
     marginTop: 2,

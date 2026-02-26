@@ -10,11 +10,13 @@ export default function SecondLayout({ children }) {
       <View style={styles.container}>
         <TopBar />
 
-        {/* ✅ Screen Content */}
+        {/* Screen Content */}
         <View style={styles.content}>{children}</View>
 
-        {/* ✅ Bottom bar */}
-        <BottomNavigationBar />
+        {/* Bottom Navigation */}
+        <View style={styles.bottomBarWrap}>
+          <BottomNavigationBar />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -33,5 +35,10 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
+    minHeight: 0,
+  },
+
+  bottomBarWrap: {
+    backgroundColor: "#F8FAFC",
   },
 });
