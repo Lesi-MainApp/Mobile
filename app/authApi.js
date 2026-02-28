@@ -1,4 +1,3 @@
-// src/app/authApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { BASE_URL } from "./api/api";
 
@@ -27,6 +26,18 @@ export const authApi = createApi({
       }),
     }),
 
+    verifyForgotOtp: builder.mutation({
+      query: ({ identifier, code }) => ({
+        url: "/whatsapp/verify-code",
+        method: "POST",
+        body: {
+          identifier,
+          code,
+          purpose: "reset_password",
+        },
+      }),
+    }),
+
     resendSignupOtp: builder.mutation({
       query: ({ phonenumber }) => ({
         url: "/whatsapp/send-code",
@@ -39,18 +50,14 @@ export const authApi = createApi({
       query: (body) => ({ url: "/signin", method: "POST", body }),
     }),
 
-    // cookie clear (kept)
     signout: builder.mutation({
       query: () => ({ url: "/signout", method: "POST" }),
     }),
 
-    // ✅ token logout (optional - if you created POST /api/auth/logout)
     logout: builder.mutation({
       query: () => ({ url: "/logout", method: "POST" }),
     }),
 
-    // ✅ IMPORTANT: this must match your backend route:
-    // POST /api/auth/student/clear-session
     clearStudentSession: builder.mutation({
       query: (body) => ({
         url: "/student/clear-session",
@@ -80,11 +87,12 @@ export const authApi = createApi({
 export const {
   useSignupMutation,
   useVerifySignupOtpMutation,
+  useVerifyForgotOtpMutation,
   useResendSignupOtpMutation,
   useSigninMutation,
   useSignoutMutation,
   useLogoutMutation,
-  useClearStudentSessionMutation, // ✅ THIS FIXES YOUR ERROR
+  useClearStudentSessionMutation,
   useForgotSendOtpMutation,
   useForgotResetMutation,
 } = authApi;

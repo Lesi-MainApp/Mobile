@@ -1,4 +1,3 @@
-// pages/OTP.js
 import React, { useRef, useState, useMemo } from "react";
 import {
   View,
@@ -13,22 +12,34 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { useVerifySignupOtpMutation } from "../app/authApi";
+import {
+  useVerifySignupOtpMutation,
+  useVerifyForgotOtpMutation,
+} from "../app/authApi";
+
+import useT from "../app/i18n/useT";
 
 const BG_INPUT = "#F1F5F9";
 const PLACEHOLDER = "#97A4B8";
 const PRIMARY = "#214294";
 
-const maskPhone = (phone) => {
-  const p = String(phone || "").trim();
+const maskPhone = (value) => {
+  const p = String(value || "").trim();
   if (!p) return "07xxxxx";
+  if (p.includes("@")) {
+    const [name, domain] = p.split("@");
+    const visible = (name || "").slice(0, 2);
+    return `${visible}***@${domain || ""}`;
+  }
   const first2 = p.slice(0, 2) || "07";
   return `${first2}xxxxx`;
 };
 
 export default function OTP({ navigation, route }) {
-  const phoneOrId = route?.params?.phone || ""; // phone OR email
-  const flow = route?.params?.flow || "signup"; // "signup" | "forgot"
+  const { lang, t, sinFont } = useT();
+
+  const phoneOrId = route?.params?.phone || "";
+  const flow = route?.params?.flow || "signup";
   const masked = useMemo(() => maskPhone(phoneOrId), [phoneOrId]);
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -36,8 +47,19 @@ export default function OTP({ navigation, route }) {
   const [loading, setLoading] = useState(false);
 
   const [verifySignupOtp] = useVerifySignupOtpMutation();
+  const [verifyForgotOtp] = useVerifyForgotOtpMutation();
 
   const codeValue = useMemo(() => otp.join(""), [otp]);
+
+  // ✅ USE YOUR EXISTING TRANSLATION KEYS ONLY
+  const subtitle = useMemo(() => {
+    if (lang === "si") {
+      return (t("otpSubtitle_si") || "")
+        .replace("{masked}", masked);
+    }
+    return (t("otpSubtitle_en") || "")
+      .replace("{masked}", masked);
+  }, [lang, masked, t]);
 
   const onChangeDigit = (text, index) => {
     const digit = (text || "").replace(/[^0-9]/g, "").slice(-1);
@@ -45,7 +67,9 @@ export default function OTP({ navigation, route }) {
     next[index] = digit;
     setOtp(next);
 
-    if (digit && index < 5) inputsRef.current[index + 1]?.focus();
+    if (digit && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
   };
 
   const onKeyPress = (e, index) => {
@@ -74,20 +98,21 @@ export default function OTP({ navigation, route }) {
       setLoading(true);
 
       if (flow === "signup") {
-        // ✅ verify signup OTP
         await verifySignupOtp({ phonenumber: phoneOrId, code }).unwrap();
         navigation.replace("MainSelectgrade");
         return;
       }
 
-      // ✅ forgot flow: go back to ForgotPassword page (RESET STEP)
+      await verifyForgotOtp({ identifier: phoneOrId, code }).unwrap();
+
       navigation.replace("ForgotPassword", {
         step: "reset",
         identifier: phoneOrId,
         code,
       });
     } catch (e) {
-      const msg = e?.data?.message || e?.message || "OTP verify failed";
+      const msg =
+        e?.data?.message || e?.message || "OTP verification failed";
       Alert.alert("Error", msg);
     } finally {
       setLoading(false);
@@ -100,10 +125,17 @@ export default function OTP({ navigation, route }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={styles.container}>
+
+        {/* ✅ ALWAYS ENGLISH */}
         <Text style={styles.title}>OTP Verification</Text>
 
-        <Text style={styles.subTitle}>
-          Enter the 6 digit code we sent to {masked}. Check your WhatsApp
+        <Text
+          style={[
+            styles.subTitle,
+            lang === "si" ? sinFont("regular") : null,
+          ]}
+        >
+          {subtitle}
         </Text>
 
         <View style={styles.otpRow}>
@@ -123,9 +155,20 @@ export default function OTP({ navigation, route }) {
           ))}
         </View>
 
-        <Pressable onPress={onVerify} style={styles.gradientBtnOuter}>
+        <Pressable
+          onPress={onVerify}
+          style={styles.gradientBtnOuter}
+          disabled={loading}
+        >
           <LinearGradient
-            colors={["#086DFF", "#5E9FFD", "#7DB1FC", "#62C4F6", "#48D7F0", "#C7F4F8"]}
+            colors={[
+              "#086DFF",
+              "#5E9FFD",
+              "#7DB1FC",
+              "#62C4F6",
+              "#48D7F0",
+              "#C7F4F8",
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientBtn}
@@ -137,6 +180,7 @@ export default function OTP({ navigation, route }) {
             )}
           </LinearGradient>
         </Pressable>
+
       </View>
     </KeyboardAvoidingView>
   );
@@ -150,7 +194,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { fontSize: 22, fontWeight: "800", color: PRIMARY },
+  title: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: PRIMARY,
+  },
   subTitle: {
     marginTop: 8,
     fontSize: 12,
@@ -192,5 +240,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 16,
   },
-  gradientBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
+  gradientBtnText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
+  },
 });

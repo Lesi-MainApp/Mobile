@@ -135,7 +135,13 @@ export default function LMS() {
         </Pressable>
 
         {!!saving && (
-          <Text style={[styles.centerDesc, { marginTop: 10 }, lang === "si" && sinFont()]}>
+          <Text
+            style={[
+              styles.centerDesc,
+              { marginTop: 10 },
+              lang === "si" && sinFont(),
+            ]}
+          >
             Saving grade...
           </Text>
         )}
@@ -236,7 +242,15 @@ export default function LMS() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F8FAFC" },
-  content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 140 },
+
+  // only changed: vertically center card
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 140,
+    justifyContent: "center",
+  },
 
   fullCard: {
     width: "100%",

@@ -1,4 +1,3 @@
-// src/pages/DailyQuizzMenu.js
 import React, { useMemo } from "react";
 import {
   View,
@@ -13,7 +12,10 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useGetPublishedPapersQuery } from "../app/paperApi";
-import { useStartAttemptMutation, useGetMyAttemptsByPaperQuery } from "../app/attemptApi";
+import {
+  useStartAttemptMutation,
+  useGetMyAttemptsByPaperQuery,
+} from "../app/attemptApi";
 import { useGetMyPaymentStatusQuery } from "../app/paymentApi";
 
 const PRIMARY = "#1153ec";
@@ -52,13 +54,11 @@ const PaperCard = ({
   const payType = String(paper.payment || "free").toLowerCase();
   const isPaidPaper = payType === "paid";
 
-  // backend should return: { required: true, unlocked: true/false }
   const unlocked = isPaidPaper ? !!paymentContext?.unlocked : true;
 
   const attemptsLeft = Number(attemptsContext?.attemptsLeft ?? paper.attempts);
   const isOver = attemptsLeft <= 0;
 
-  // ✅ button logic (same UI)
   const showPayNow = isPaidPaper && !unlocked;
   const btnText = showPayNow ? "PAY NOW" : isOver ? "View Result" : "Attempt Now";
 
@@ -100,11 +100,7 @@ const PaperCard = ({
           styles.btn,
           pressed && styles.btnPressed,
           starting && { opacity: 0.6 },
-
-          // ✅ PayNow red (only color change, design same)
           showPayNow && { backgroundColor: RED_BTN },
-
-          // existing "View Result" light style
           !showPayNow && isOver && styles.btnLight,
         ]}
       >
@@ -128,7 +124,13 @@ const PaperCard = ({
   );
 };
 
-const PaperCardWithContext = ({ paper, onAttemptNow, onViewResult, onPayNow, starting }) => {
+const PaperCardWithContext = ({
+  paper,
+  onAttemptNow,
+  onViewResult,
+  onPayNow,
+  starting,
+}) => {
   const { data: attemptsContext, isFetching: attemptsFetching } =
     useGetMyAttemptsByPaperQuery({ paperId: paper.id }, { skip: !paper?.id });
 
@@ -176,7 +178,7 @@ export default function DailyQuizMenu({ route }) {
 
   const PAPERS = useMemo(() => {
     return (Array.isArray(papersRaw) ? papersRaw : []).map((p) => ({
-      id: String(p?._id),
+      id: String(p?._id || ""),
       title: String(p?.paperTitle || "Daily Quiz"),
       mcqCount: Number(p?.questionCount || 0),
       timeMin: Number(p?.timeMinutes || 0),
@@ -234,9 +236,6 @@ export default function DailyQuizMenu({ route }) {
   return (
     <View style={styles.screen}>
       <Text style={styles.pageTitle}>Daily Quiz</Text>
-      <Text style={styles.pageSub}>
-        {subject ? `${subject} • ${gradeNumber || ""}` : "Choose a paper and start"}
-      </Text>
 
       {!canFetch ? (
         <View style={styles.center}>
@@ -255,7 +254,9 @@ export default function DailyQuizMenu({ route }) {
       ) : !PAPERS.length ? (
         <View style={styles.center}>
           <Text style={styles.infoText}>No Daily Quiz Papers Found</Text>
-          <Text style={styles.infoTextSmall}>Please publish daily quiz papers in dashboard.</Text>
+          <Text style={styles.infoTextSmall}>
+            Please publish daily quiz papers in dashboard.
+          </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -277,15 +278,15 @@ export default function DailyQuizMenu({ route }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F8FAFC", padding: 16, paddingTop: 18 },
-  pageTitle: { fontSize: 22, fontWeight: "900", color: PRIMARY, textAlign: "center" },
-  pageSub: {
-    marginTop: 6,
-    marginBottom: 14,
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
+
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: PRIMARY,
     textAlign: "center",
+    marginBottom: 4,
   },
+
   list: { paddingBottom: 24, gap: 12 },
 
   card: {
@@ -310,17 +311,29 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
     zIndex: 10,
   },
+
   badgeText: { fontWeight: "900", fontSize: 10 },
 
-  cardTitle: { fontSize: 15, fontWeight: "900", color: "#0F172A", textAlign: "center" },
+  // same custom font feel as Lessons page lessonTitle / descText
+  cardTitle: {
+    marginTop: 2,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0F172A",
+    textAlign: "center",
+    lineHeight: 30,
+    fontFamily: "AbhayaLibre_700Bold",
+    paddingHorizontal: 72,
+  },
 
   metaRowCenter: {
-    marginTop: 10,
+    marginTop: 12,
     flexDirection: "row",
     justifyContent: "center",
     flexWrap: "wrap",
     gap: 10,
   },
+
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -332,6 +345,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
   },
+
   metaText: { fontSize: 11, fontWeight: "800", color: "#475569" },
 
   btn: {
@@ -344,6 +358,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
+
   btnLight: { backgroundColor: "#EEF2FF", borderWidth: 1, borderColor: "#C7D2FE" },
   btnPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   btnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
@@ -351,5 +366,11 @@ const styles = StyleSheet.create({
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
   infoText: { fontSize: 14, fontWeight: "900", color: "#0F172A", textAlign: "center" },
-  infoTextSmall: { marginTop: 8, fontSize: 12, fontWeight: "700", color: "#64748B", textAlign: "center" },
+  infoTextSmall: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#64748B",
+    textAlign: "center",
+  },
 });

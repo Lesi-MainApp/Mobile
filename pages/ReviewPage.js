@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import YoutubePlayer from "react-native-youtube-iframe";
@@ -59,7 +60,6 @@ export default function ReviewPage({ navigation, route }) {
     result?.percentage || (total ? Math.round((correctCount / total) * 100) : 0)
   );
 
-  // ✅ attempt meta from backend
   const paperId = String(data?.meta?.paperId || "");
   const attemptsAllowed = Number(data?.meta?.attemptsAllowed || 1);
   const attemptNo = Number(data?.meta?.attemptNo || 1);
@@ -185,7 +185,6 @@ export default function ReviewPage({ navigation, route }) {
               <Text style={styles.btnLightText}>Home</Text>
             </Pressable>
 
-            {/* ✅ only show retry if attempts left */}
             {canRetry ? (
               <Pressable onPress={onRetry} style={styles.btnBlue} disabled={starting}>
                 <Text style={styles.btnBlueText}>
@@ -194,14 +193,12 @@ export default function ReviewPage({ navigation, route }) {
               </Pressable>
             ) : null}
           </View>
-
-          
         </View>
 
         {wrongFirst.length > 0 ? (
           <Text style={styles.sectionTitle}>Wrong Answers (Review First)</Text>
         ) : (
-          <Text style={styles.sectionTitle}>No wrong answers </Text>
+          <Text style={styles.sectionTitle}>No wrong answers</Text>
         )}
 
         <FlatList
@@ -217,7 +214,13 @@ export default function ReviewPage({ navigation, route }) {
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Explain Video</Text>
+                <View style={styles.modalTitleWrap}>
+                  <View style={styles.modalIconCircle}>
+                    <Ionicons name="play-circle-outline" size={18} color={BLUE} />
+                  </View>
+                  <Text style={styles.modalTitle}>Explain Video</Text>
+                </View>
+
                 <Pressable onPress={() => setVideoOpen(false)} hitSlop={10}>
                   <Ionicons name="close" size={22} color={TEXT_DARK} />
                 </Pressable>
@@ -239,13 +242,32 @@ export default function ReviewPage({ navigation, route }) {
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Explain Logic</Text>
+                <View style={styles.modalTitleWrap}>
+                  <View style={styles.modalIconCircle}>
+                    <Ionicons name="bulb-outline" size={18} color={BLUE} />
+                  </View>
+                  <Text style={styles.modalTitle}>Explain Logic</Text>
+                </View>
+
                 <Pressable onPress={() => setLogicOpen(false)} hitSlop={10}>
                   <Ionicons name="close" size={22} color={TEXT_DARK} />
                 </Pressable>
               </View>
 
-              <Text style={styles.modalBody}>{activeLogicText}</Text>
+              <View style={styles.logicCard}>
+                <Text style={styles.logicLabel}>Explanation</Text>
+
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.logicScroll}
+                >
+                  <Text style={styles.logicText}>{activeLogicText}</Text>
+                </ScrollView>
+              </View>
+
+              <Pressable onPress={() => setLogicOpen(false)} style={styles.logicCloseBtn}>
+                <Text style={styles.logicCloseBtnText}>Close</Text>
+              </Pressable>
             </View>
           </View>
         </Modal>
@@ -270,7 +292,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
+
   scoreText: { fontSize: 34, fontWeight: "900", color: BLUE },
+
   scoreSub: {
     fontSize: 10,
     fontWeight: "800",
@@ -278,7 +302,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
     letterSpacing: 1,
   },
+
   scoreBtns: { flexDirection: "row", gap: 10, marginTop: 12 },
+
   btnLight: {
     paddingHorizontal: 18,
     paddingVertical: 8,
@@ -287,14 +313,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
+
   btnLightText: { fontWeight: "800", color: TEXT_DARK, fontSize: 12 },
+
   btnBlue: {
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: BLUE,
   },
+
   btnBlueText: { fontWeight: "900", color: "#FFFFFF", fontSize: 12 },
+
   scoreMeta: {
     marginTop: 10,
     fontSize: 12,
@@ -302,6 +332,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
   },
+
   attemptMeta: {
     marginTop: 6,
     fontSize: 11,
@@ -325,25 +356,131 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 14,
   },
+
   modalCard: {
     width: "100%",
     maxWidth: 520,
     backgroundColor: "#fff",
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 4,
   },
+
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  modalTitle: { fontWeight: "900", fontSize: 16, color: TEXT_DARK },
-  modalBody: { color: TEXT_DARK, fontSize: 14, fontWeight: "700", lineHeight: 20 },
-  videoBox: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 14, overflow: "hidden" },
+
+  modalTitleWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  modalIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modalTitle: {
+    fontWeight: "900",
+    fontSize: 16,
+    color: TEXT_DARK,
+  },
+
+  modalBody: {
+    color: TEXT_DARK,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+    textAlign: "center",
+    paddingVertical: 20,
+  },
+
+  videoBox: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+  },
+
+  // professional logic modal
+  logicCard: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 12,
+    maxHeight: 300,
+  },
+
+  logicLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#64748B",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+
+  logicScroll: {
+    paddingBottom: 4,
+  },
+
+  logicText: {
+    color: TEXT_DARK,
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: "NotoSerifSinhala_700Bold",
+  },
+
+  logicCloseBtn: {
+    marginTop: 12,
+    alignSelf: "flex-end",
+    backgroundColor: "#0B1220",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+
+  logicCloseBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+  },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
-  helper: { marginTop: 10, textAlign: "center", color: "#64748B", fontSize: 12, fontWeight: "600" },
-  retryBtn: { marginTop: 12, backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
+
+  helper: {
+    marginTop: 10,
+    textAlign: "center",
+    color: "#64748B",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  retryBtn: {
+    marginTop: 12,
+    backgroundColor: "#2563EB",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+
   retryText: { color: "#fff", fontWeight: "900" },
 });

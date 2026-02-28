@@ -16,7 +16,7 @@ export default function PaperComponent({ index, total, question, selectedOption,
         Question {index + 1} / {total}
       </Text>
 
-      {!!q.lessonName && <Text style={styles.lesson}>{q.lessonName}</Text>}
+     
 
       <Text style={styles.qText}>{q.question}</Text>
 
@@ -42,7 +42,7 @@ export default function PaperComponent({ index, total, question, selectedOption,
         })}
       </View>
 
-      <Text style={styles.helper}>Select one answer and continue.</Text>
+      
     </View>
   );
 }
@@ -60,9 +60,29 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
-  topCount: { fontSize: 12, fontWeight: "900", color: MUTED },
-  lesson: { marginTop: 6, fontSize: 12, fontWeight: "900", color: BLUE },
-  qText: { marginTop: 10, fontSize: 15, fontWeight: "900", color: TEXT_DARK, lineHeight: 22 },
+
+  topCount: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: MUTED,
+  },
+
+  lesson: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "900",
+    color: BLUE,
+  },
+
+  // question text font
+  qText: {
+    marginTop: 10,
+    fontSize: 15,
+    color: TEXT_DARK,
+    lineHeight: 22,
+    fontFamily: "NotoSerifSinhala_700Bold",
+  },
+
   opt: {
     borderWidth: 1,
     borderColor: BORDER,
@@ -74,10 +94,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+
   optActive: {
     borderColor: BLUE,
     backgroundColor: "#EFF6FF",
   },
+
   dot: {
     width: 14,
     height: 14,
@@ -85,11 +107,29 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#94A3B8",
   },
+
   dotActive: {
     borderColor: BLUE,
     backgroundColor: BLUE,
   },
-  optText: { flex: 1, fontSize: 13, fontWeight: "800", color: TEXT_DARK },
-  optTextActive: { color: BLUE },
-  helper: { marginTop: 12, fontSize: 11, fontWeight: "700", color: MUTED, textAlign: "center" },
+
+  // answers text font
+  optText: {
+    flex: 1,
+    fontSize: 13,
+    color: TEXT_DARK,
+    fontFamily: "AbhayaLibre_300Bold",
+  },
+
+  optTextActive: {
+    color: BLUE,
+  },
+
+  helper: {
+    marginTop: 12,
+    fontSize: 11,
+    fontWeight: "700",
+    color: MUTED,
+    textAlign: "center",
+  },
 });

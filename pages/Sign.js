@@ -29,12 +29,9 @@ import { setUser, updateUserFields } from "../app/features/userSlice";
 
 import { useSignupMutation, useSigninMutation } from "../app/authApi";
 import { useSaveStudentGradeSelectionMutation } from "../app/userApi";
-
-// ✅ NEW
 import { useSaveLanguageSelectionMutation } from "../app/languageApi";
 import { loadStoredLanguage } from "../app/languageStorage";
 
-// ✅ i18n
 import useT from "../app/i18n/useT";
 
 const BG_INPUT = "#F1F5F9";
@@ -89,7 +86,6 @@ export default function Sign({ navigation, route }) {
   const [signup] = useSignupMutation();
   const [signin] = useSigninMutation();
   const [saveGradeSelection] = useSaveStudentGradeSelectionMutation();
-
   const [saveLanguageSelection] = useSaveLanguageSelectionMutation();
 
   const selectedLevel = useSelector((s) => s?.auth?.selectedLevel);
@@ -101,7 +97,6 @@ export default function Sign({ navigation, route }) {
   const [mode, setMode] = useState(route?.params?.mode || "signup");
   const isSignUp = mode === "signup";
 
-  // Signup fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState(route?.params?.phone || "");
@@ -111,7 +106,6 @@ export default function Sign({ navigation, route }) {
   const [birthday, setBirthday] = useState(null);
   const [passwordUp, setPasswordUp] = useState("");
 
-  // Signin fields
   const [phoneIn, setPhoneIn] = useState(route?.params?.phone || "");
   const [passwordIn, setPasswordIn] = useState("");
 
@@ -177,15 +171,15 @@ export default function Sign({ navigation, route }) {
     const bd = formatBirthday(birthday);
     const pw = String(passwordUp || "");
 
-    if (!n) return "errNameRequired";
-    if (!em) return "errEmailRequired";
-    if (!ph) return "errPhoneRequired";
-    if (!dis) return "errDistrictRequired";
-    if (!tw) return "errTownRequired";
-    if (!ad) return "errAddressRequired";
-    if (!bd) return "Birthday is required";
-    if (!pw) return "errPasswordRequired";
-    if (pw.length < 6) return "errPasswordMin6";
+    if (!n) return "Please enter your name";
+    if (!em) return "Please enter your email";
+    if (!ph) return "Please enter your phone number";
+    if (!dis) return "Please select your district";
+    if (!tw) return "Please enter your town";
+    if (!ad) return "Please enter your address";
+    if (!bd) return "Please select your birthday";
+    if (!pw) return "Please enter your password";
+    if (pw.length < 6) return "Password must be at least 6 characters";
     return null;
   };
 
@@ -194,14 +188,9 @@ export default function Sign({ navigation, route }) {
       setLoading(true);
 
       if (isSignUp) {
-        const errKey = validateSignup();
-        if (errKey) {
-          Alert.alert(
-            t("requiredTitle"),
-            typeof errKey === "string" && errKey.startsWith("err")
-              ? t(errKey)
-              : errKey
-          );
+        const errMsg = validateSignup();
+        if (errMsg) {
+          Alert.alert("Required", errMsg);
           setLoading(false);
           return;
         }
@@ -212,10 +201,10 @@ export default function Sign({ navigation, route }) {
           whatsappnumber: phone.trim(),
           password: passwordUp,
           role: "student",
-          district: district.trim(), // ✅ always English enum value
+          district: district.trim(),
           town: town.trim(),
           address: address.trim(),
-          birthday: formatBirthday(birthday), // ✅ YYYY-MM-DD
+          birthday: formatBirthday(birthday),
         };
 
         dispatch(setSignupDistrict(payload.district));
@@ -229,7 +218,7 @@ export default function Sign({ navigation, route }) {
           })
         );
 
-        Alert.alert(t("otpSentTitle"), t("otpSentMsg"));
+        Alert.alert("OTP Sent", "We sent OTP to your WhatsApp + Email.");
 
         navigation.navigate("OTP", {
           phone: payload.whatsappnumber,
@@ -296,7 +285,7 @@ export default function Sign({ navigation, route }) {
                 key={d}
                 style={styles.modalItem}
                 onPress={() => {
-                  setDistrict(d); // ✅ save ENGLISH only
+                  setDistrict(d);
                   setDistrictModal(false);
                 }}
               >
@@ -311,7 +300,6 @@ export default function Sign({ navigation, route }) {
     </Modal>
   );
 
-  // ✅ SIGNIN
   if (!isSignUp) {
     return (
       <KeyboardAvoidingView
@@ -401,7 +389,6 @@ export default function Sign({ navigation, route }) {
     );
   }
 
-  // ✅ SIGNUP
   return (
     <KeyboardAvoidingView
       style={styles.page}
@@ -482,7 +469,6 @@ export default function Sign({ navigation, route }) {
             style={{ minHeight: 90, textAlignVertical: "top", paddingTop: 12 }}
           />
 
-          {/* ✅ Birthday field with calendar */}
           <Pressable
             onPress={() => setBirthdayPickerVisible(true)}
             style={[styles.input, { justifyContent: "center" }]}
@@ -496,7 +482,7 @@ export default function Sign({ navigation, route }) {
                 sinFont(birthday ? "bold" : undefined),
               ]}
             >
-              {birthday ? formatBirthday(birthday) : "Birthday"}
+              {birthday ? formatBirthday(birthday) : t("birthday")}
             </Text>
           </Pressable>
 

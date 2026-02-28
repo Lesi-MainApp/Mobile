@@ -1,4 +1,3 @@
-// pages/ForgotPassword.js
 import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
@@ -21,7 +20,6 @@ import {
 import { useDispatch } from "react-redux";
 import { setAuth } from "../app/features/authSlice";
 
-// ✅ i18n
 import useT from "../app/i18n/useT";
 
 const BG_INPUT = "#F1F5F9";
@@ -32,14 +30,10 @@ export default function ForgotPassword({ navigation, route }) {
   const dispatch = useDispatch();
   const { t, sinFont } = useT();
 
-  // ✅ step control via route params
-  // send: default
-  // reset: after OTP verified
-  const step = route?.params?.step || "send"; // "send" | "reset"
-  const identifierFromOtp = route?.params?.identifier || ""; // phone or email
-  const codeFromOtp = route?.params?.code || ""; // 6 digit code
+  const step = route?.params?.step || "send";
+  const identifierFromOtp = route?.params?.identifier || "";
+  const codeFromOtp = route?.params?.code || "";
 
-  // ✅ UI state
   const [identifier, setIdentifier] = useState(identifierFromOtp || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -50,19 +44,17 @@ export default function ForgotPassword({ navigation, route }) {
   const [forgotReset] = useForgotResetMutation();
   const [signin] = useSigninMutation();
 
-  // ✅ keep identifier in sync when coming back from OTP
   useEffect(() => {
     if (identifierFromOtp) setIdentifier(identifierFromOtp);
   }, [identifierFromOtp]);
 
   const isResetStep = useMemo(() => step === "reset", [step]);
 
-  // ✅ SEND OTP
   const onSendOtp = async () => {
     try {
       const id = identifier.trim();
       if (!id) {
-        Alert.alert(t("forgotPasswordTitle"), t("fpEnterIdentifier"));
+        Alert.alert("Forgot Password", "Please enter your phone number or email");
         return;
       }
 
@@ -70,50 +62,47 @@ export default function ForgotPassword({ navigation, route }) {
 
       await forgotSendOtp({ identifier: id }).unwrap();
 
-      Alert.alert(t("otpSentTitle"), t("fpOtpSentMsg"));
+      Alert.alert("OTP Sent", "We sent OTP to your WhatsApp + Email.");
 
-      // ✅ go OTP screen for forgot flow
       navigation.navigate("OTP", {
-        phone: id, // can be phone or email
+        phone: id,
         flow: "forgot",
       });
     } catch (e) {
-      const msg = e?.data?.message || e?.message || t("fpSendFailed");
-      Alert.alert(t("errorTitle"), msg);
+      const msg = e?.data?.message || e?.message || "Failed to send OTP";
+      Alert.alert("Error", msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ RESET PASSWORD (same page)
   const onReset = async () => {
     try {
       const id = identifier.trim();
       const code = String(codeFromOtp || "").trim();
 
       if (!id) {
-        Alert.alert(t("resetPasswordTitle"), t("rpMissingIdentifier"));
+        Alert.alert("Reset Password", "Missing phone number or email");
         return;
       }
       if (!code || code.length !== 6) {
-        Alert.alert(t("resetPasswordTitle"), t("rpOtpMissing"));
+        Alert.alert("Reset Password", "OTP is missing or invalid");
         navigation.replace("OTP", { phone: id, flow: "forgot" });
         return;
       }
 
       if (!newPassword || !confirmPassword) {
-        Alert.alert(t("resetPasswordTitle"), t("rpEnterPasswords"));
+        Alert.alert("Reset Password", "Please enter and confirm your new password");
         return;
       }
 
       if (String(newPassword) !== String(confirmPassword)) {
-        Alert.alert(t("resetPasswordTitle"), t("rpPasswordsMismatch"));
+        Alert.alert("Reset Password", "Passwords do not match");
         return;
       }
 
       setLoading(true);
 
-      // ✅ backend will verify OTP internally and reset password
       await forgotReset({
         identifier: id,
         code,
@@ -121,7 +110,6 @@ export default function ForgotPassword({ navigation, route }) {
         confirmPassword,
       }).unwrap();
 
-      // ✅ Auto-login ONLY if identifier is phone (because signin uses phone)
       if (!String(id).includes("@")) {
         const loginRes = await signin({
           whatsappnumber: id,
@@ -138,12 +126,11 @@ export default function ForgotPassword({ navigation, route }) {
         return;
       }
 
-      // ✅ If identifier is email, ask them to sign in manually (no phone for signin)
-      Alert.alert(t("successTitle"), t("rpSuccessManualSignin"));
+      Alert.alert("Success", "Password reset successful. Please sign in.");
       navigation.replace("Sign", { mode: "signin", phone: "" });
     } catch (e) {
-      const msg = e?.data?.message || e?.message || t("rpResetFailed");
-      Alert.alert(t("errorTitle"), msg);
+      const msg = e?.data?.message || e?.message || "Failed to reset password";
+      Alert.alert("Error", msg);
     } finally {
       setLoading(false);
     }
@@ -163,38 +150,30 @@ export default function ForgotPassword({ navigation, route }) {
           {isResetStep ? t("fpResetSubtitle") : t("fpSendSubtitle")}
         </Text>
 
-        {/* ✅ Identifier always shown (same design) */}
-        <TextInput
+        <Field
           placeholder={t("fpPlaceholderIdentifier")}
-          placeholderTextColor={PLACEHOLDER}
+          placeholderFont={sinFont()}
           value={identifier}
           onChangeText={setIdentifier}
           autoCapitalize="none"
-          style={styles.input}
-          editable={!isResetStep} // ✅ lock on reset step
-          allowFontScaling={false}
+          editable={!isResetStep}
         />
 
-        {/* ✅ RESET FIELDS only after OTP verify */}
         {isResetStep && (
           <>
-            <TextInput
+            <Field
               placeholder={t("fpPlaceholderNewPassword")}
-              placeholderTextColor={PLACEHOLDER}
+              placeholderFont={sinFont()}
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry
-              style={styles.input}
-              allowFontScaling={false}
             />
-            <TextInput
+            <Field
               placeholder={t("fpPlaceholderConfirmPassword")}
-              placeholderTextColor={PLACEHOLDER}
+              placeholderFont={sinFont()}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
-              style={styles.input}
-              allowFontScaling={false}
             />
           </>
         )}
@@ -230,7 +209,6 @@ export default function ForgotPassword({ navigation, route }) {
           <Text style={[styles.backText, sinFont("bold")]}>{t("back")}</Text>
         </Pressable>
 
-        {/* ✅ If user wants to re-verify OTP from reset screen */}
         {isResetStep && (
           <Pressable
             onPress={() =>
@@ -241,13 +219,50 @@ export default function ForgotPassword({ navigation, route }) {
             }
             style={{ marginTop: 10 }}
           >
-            <Text style={[{ color: PRIMARY, fontSize: 12, fontWeight: "900" }, sinFont("bold")]}>
-              {t("fpVerifyOtpAgain")}
-            </Text>
+           
           </Pressable>
         )}
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+function Field({
+  placeholder,
+  placeholderFont,
+  value,
+  onChangeText,
+  secureTextEntry,
+  autoCapitalize,
+  editable = true,
+}) {
+  const empty = !String(value || "").length;
+
+  return (
+    <View style={styles.inputWrap}>
+      {empty ? (
+        <Text
+          pointerEvents="none"
+          style={[styles.fakePlaceholder, placeholderFont]}
+          numberOfLines={1}
+        >
+          {placeholder}
+        </Text>
+      ) : null}
+
+      <TextInput
+        placeholder=""
+        placeholderTextColor="transparent"
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
+        editable={editable}
+        allowFontScaling={false}
+        underlineColorAndroid="transparent"
+        style={[styles.input, styles.realInputLayer]}
+      />
+    </View>
   );
 }
 
@@ -259,7 +274,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   title: { fontSize: 22, fontWeight: "800", color: PRIMARY },
+
   subTitle: {
     marginTop: 8,
     fontSize: 12,
@@ -269,6 +286,13 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     lineHeight: 18,
   },
+
+  inputWrap: {
+    width: "100%",
+    position: "relative",
+    marginBottom: 12,
+  },
+
   input: {
     width: "100%",
     height: 48,
@@ -278,20 +302,41 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    marginBottom: 12,
   },
+
+  realInputLayer: {
+    zIndex: 1,
+    elevation: 1,
+  },
+
+  fakePlaceholder: {
+    position: "absolute",
+    left: 14,
+    right: 14,
+    top: Platform.OS === "ios" ? 15 : 0,
+    height: 48,
+    color: PLACEHOLDER,
+    fontSize: 14,
+    fontWeight: "400",
+    textAlignVertical: "center",
+    zIndex: 5,
+    elevation: 5,
+  },
+
   gradientBtnOuter: {
     width: "100%",
     borderRadius: 16,
     overflow: "hidden",
     marginTop: 6,
   },
+
   gradientBtn: {
     height: 50,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 16,
   },
+
   gradientBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
 
   backBtn: { marginTop: 14 },

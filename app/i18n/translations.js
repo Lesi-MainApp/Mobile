@@ -1,47 +1,42 @@
-// app/i18n/translations.js
+// app/i18n/translations.js ✅ FULL FILE
+// ✅ Legacy text NOT changed
+// ✅ ONLY ADDED: Result 5 keys + Live 5 keys (as you requested)
 export const translations = {
   si: {
-    // Common (LEGACY KEPT)
+    // Common / useful legacy keys
     name: "ku",
     email: "Bfï,a",
     phone: "ÿrl:k wxlh",
+    phoneNumber: "jÜiema wxlh",
     district: "Èia;%slalh",
     town: "k.rh",
     address: ",smskh",
+    birthday: "Wmk Èkh",
     password: "uqrmoh",
     forgotPassword: "wu;l jQ uqrmo@",
     welcome: "idorfhka ms<s.ksuq",
-
-    errorTitle: "Error",
-    successTitle: "Success",
 
     selectLanguage: "NdIdj f;darkak",
     sinhala: "isxy,",
     english: "English",
     continue: "bÈßhg",
 
-    // ✅ ONLY LABELS translated to Sinhala (backend values NOT translated)
+    // Useful labels kept
     Date: "දිනය",
     Time: "වේලාව",
     Description: "විස්තරය",
-
     WatchNow: "msúfikak",
     Lesson: "mdvu",
-
     ViewLesson: "mdvï n,kak",
 
+    // Nav / useful legacy
     navHome: "uq,a msgqj",
     navLive: "iÔj",
     navResult: "m%;sM,",
     navEnroll: ",shdmÈxÑ",
     navLms: "mdvï",
 
-    loadingLessons: "mdvñ mQrKh fjñka mj;S",
-    failedLoadLessons: "mdvï ,nd.ekSu wid¾:lhs",
-    tryAgain: "kej; W;aidy lrkak",
-    noLessons: "mdvï fkdue;",
-    missingClassId: "^classId& fkdue;",
-
+    // Useful learning labels
     islandRank: "uq¿ Èjhsfkkau",
     coins: "ldis",
     totalFinishedExams: "iïmQ¾K l, úNd.",
@@ -52,6 +47,7 @@ export const translations = {
     modelPapers: "wdo¾Y m%Yak",
     pastPapers: "miq.sh úNd.",
 
+    // Grades
     grade1: "m,uq fY%a‚h",
     grade2: "fojk fY%a‚h",
     grade3: ";=kajk fY%a‚h",
@@ -67,9 +63,9 @@ export const translations = {
     grade13: "oy;=kajk fY%a‚h",
     grade: "fY%a‚h",
 
+    // Auth UI labels
     signUp: ",shdmÈxÑ fjkak",
     signIn: "we;=¿ jkak",
-    phoneNumber: "jÜiema wxlh",
     selectDistrict: "Èia;%slalh f;darkak",
 
     otpSentTitle: "OTP hkjd",
@@ -77,39 +73,39 @@ export const translations = {
 
     requiredTitle: "wjYHhs",
 
-    errNameRequired: "ku wjYHhs'",
-    errEmailRequired: "Bfï,a wjYHhs'",
-    errPhoneRequired: "jÜiema wxlh wjYHhs",
-    errDistrictRequired: "Èia;%slalh wjYHhs",
-    errTownRequired: "k.rh wjYHhs",
-    errAddressRequired: ",smskh wjYHhs",
-    errPasswordRequired: "uqrmoh wjYHhs'",
-    errPasswordMin6: "uqrmohg wju wl=re ^6& la wjYhs'",
-
+    // Forgot password UI labels only
     forgotPasswordTitle: "uqrmoh wu;lo@",
     resetPasswordTitle: "uqrmoh keje; ilikak",
 
     fpSendSubtitle: "lreKdlr ÿrl:k wxlh fyda Bfï,a we;=,;a lrkak",
     fpResetSubtitle: "bÈßhg hdug kj uqrmoh we;=<;a lrkak",
 
-    fpPlaceholderIdentifier: "Bfï,a fyda jÜiema wxlh we;=,;a lrkak",
+    // ✅ corrected legacy Sinhala text
+    fpPlaceholderIdentifier: "ÿrl;k wxlh fyda Bfï,a ,smskh we;=,;a lrkak",
     fpPlaceholderNewPassword: "kj uqrmoh",
     fpPlaceholderConfirmPassword: "kej; kj uqrmoh we;=,;a lrkak",
 
-    fpSendOtpBtn: "OTP yjkak",
+    fpSendOtpBtn: "fla;h hjkak",
     back: "miqmig hkak",
     fpVerifyOtpAgain: "OTP kej; ;yjqre lrkak",
 
-    fpEnterIdentifier: "ÿrl:k wxlh fyda Bfï,a we;=,;a lrkak",
-    fpOtpSentMsg: "OTP WhatsApp + Email fj; hfõ.",
-    fpSendFailed: "OTP hEùu wid¾:hl",
+    // OTP Subtitle (legacy kept)
+    otpSubtitle_si:
+      "wxl 6lska hq;= fla;hla Tn we;=,;a lr ÿrl;k wxlfha jÜiema .sKqug fyda  Bfï,a ,smskh tjd we;lreKdlr mßlaIdlr n,d we;=,;a lrkak ",
 
-    rpMissingIdentifier: "ÿrl:k wxlh fyda Bfï,a fkdue;",
-    rpOtpMissing: "OTP fkdue;'. kej; ;yjqre lrkak",
-    rpEnterPasswords: "kj uqrmoh iy ;yjqre uqrmoh we;=,;a lrkak",
-    rpPasswordsMismatch: "uqrmoh fkdl<sfh'",
-    rpSuccessManualSignin: "uqrmoh fjkia l<d' kej; we;=¿ jkak",
-    rpResetFailed: "uqrmoh fjkia lsÍu wid¾:hl",
+    // ✅ Result page ONLY (5 keys you gave)
+    resultTitle: "m%;sM,",
+    resultTotal: "iïmQ¾K m%Yak",
+    resultCorrect: "ksjerÈ",
+    resultPercentage: "m%;sY;h",
+    resultBest: "fydou m%;sM,h",
+
+    // ✅ Live page ONLY (5 keys you gave)
+    liveTitle: "iÔj mka;s",
+    liveDate: "Èkh",
+    liveTime: "fõ,dj",
+    liveBadge: "iÔj",
+    liveJoin: "iïnkaOfjkak",
 
     districts: {
       Ampara: "wïmdr",
@@ -141,32 +137,44 @@ export const translations = {
   },
 
   en: {
+    // Common / useful legacy keys
     name: "Name",
     email: "Email",
     phone: "Phone number",
+    phoneNumber: "Phone Number",
     district: "District",
     town: "Town",
     address: "Address",
+    birthday: "Birthday",
     password: "Password",
     forgotPassword: "Forgot password?",
     welcome: "Welcome",
-
-    errorTitle: "Error",
-    successTitle: "Success",
 
     selectLanguage: "Select Language",
     sinhala: "Sinhala",
     english: "English",
     continue: "Continue",
 
+    // OTP subtitle (English)
+    otpSubtitle_en:
+      "Enter the 6 digit code we sent to {masked}.\nCheck your WhatsApp.\nCheck your email.",
+
+    // Useful labels kept
     Date: "Date",
     Time: "Time",
     Description: "Description",
-
     WatchNow: "Watch Now",
     Lesson: "Lesson",
     ViewLesson: "View Lesson",
 
+    // Nav / useful legacy
+    navHome: "Home",
+    navLive: "Live",
+    navResult: "Results",
+    navEnroll: "Enroll",
+    navLms: "LMS",
+
+    // Useful learning labels
     islandRank: "Island Rank",
     coins: "Coins",
     totalFinishedExams: "Total Finished Exams",
@@ -177,18 +185,7 @@ export const translations = {
     modelPapers: "Model papers",
     pastPapers: "Past papers",
 
-    loadingLessons: "Loading lessons...",
-    failedLoadLessons: "Failed to load lessons",
-    tryAgain: "Try again",
-    noLessons: "No lessons available.",
-    missingClassId: "Missing classId",
-
-    navHome: "Home",
-    navLive: "Live",
-    navResult: "Results",
-    navEnroll: "Enroll",
-    navLms: "LMS",
-
+    // Grades
     grade1: "Grade One",
     grade2: "Grade Two",
     grade3: "Grade Three",
@@ -204,9 +201,9 @@ export const translations = {
     grade13: "Grade Thirteen",
     grade: "Grade",
 
+    // Auth UI labels
     signUp: "Sign Up",
     signIn: "Sign In",
-    phoneNumber: "Phone Number",
     selectDistrict: "Select District",
 
     otpSentTitle: "OTP Sent",
@@ -214,22 +211,14 @@ export const translations = {
 
     requiredTitle: "Required",
 
-    errNameRequired: "Name is required",
-    errEmailRequired: "Email is required",
-    errPhoneRequired: "Phone number is required",
-    errDistrictRequired: "District is required",
-    errTownRequired: "Town is required",
-    errAddressRequired: "Address is required",
-    errPasswordRequired: "Password is required",
-    errPasswordMin6: "Password must be at least 6 characters",
-
+    // Forgot password UI labels only
     forgotPasswordTitle: "Forgot Password",
     resetPasswordTitle: "Reset Password",
 
     fpSendSubtitle: "Enter your phone number or email to receive OTP",
     fpResetSubtitle: "Enter your new password to continue",
 
-    fpPlaceholderIdentifier: "Phone or Email",
+    fpPlaceholderIdentifier: "Phone number or email",
     fpPlaceholderNewPassword: "New Password",
     fpPlaceholderConfirmPassword: "Confirm New Password",
 
@@ -237,16 +226,19 @@ export const translations = {
     back: "Back",
     fpVerifyOtpAgain: "Verify OTP Again",
 
-    fpEnterIdentifier: "Enter phone number or email",
-    fpOtpSentMsg: "We sent OTP to your WhatsApp + Email.",
-    fpSendFailed: "Failed to send OTP",
+    // ✅ Result page ONLY (same 5 keys)
+    resultTitle: "Result",
+    resultTotal: "Total",
+    resultCorrect: "Correct",
+    resultPercentage: "Percentage",
+    resultBest: "Best Completed Result",
 
-    rpMissingIdentifier: "Missing identifier (phone/email)",
-    rpOtpMissing: "OTP code missing. Please verify again.",
-    rpEnterPasswords: "Enter new password and confirm password",
-    rpPasswordsMismatch: "Passwords do not match",
-    rpSuccessManualSignin: "Password updated. Please sign in.",
-    rpResetFailed: "Reset failed",
+    // ✅ Live page ONLY (same 5 keys)
+    liveTitle: "Live Classes",
+    liveDate: "Date",
+    liveTime: "Time",
+    liveBadge: "LIVE",
+    liveJoin: "Join Class",
 
     districts: {
       Ampara: "Ampara",

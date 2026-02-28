@@ -1,171 +1,300 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function ClassEnrollCard({ item, onPressView, onPressEnroll, status }) {
-  const teacherName = useMemo(() => {
-    if (item?.teachers?.length > 0) return item.teachers[0]?.name || "Teacher";
-    return item?.teacherCount ? `${item.teacherCount} Teacher(s)` : "No Teacher";
-  }, [item]);
+const PRIMARY = "#214294";
 
-  const imgUrl = useMemo(() => {
-    const u = String(item?.imageUrl || "").trim();
-    return u.length > 0 ? u : "";
-  }, [item]);
+const getImageSource = (item) => {
+  const uri =
+    item?.image ||
+    item?.imageUrl ||
+    item?.classImage ||
+    item?.classImageUrl ||
+    item?.thumbnail ||
+    item?.thumbnailUrl ||
+    item?.banner ||
+    item?.bannerUrl ||
+    "";
 
-  const btnLabel =
-    status === "approved" ? "View" : status === "pending" ? "Pending" : "Enroll Now";
+  if (uri) {
+    return { uri: String(uri) };
+  }
 
-  const disabled = status === "pending";
+  return null;
+};
 
-  const btnBg =
-    status === "approved"
-      ? "#16A34A"
-      : status === "pending"
-      ? "#94A3B8"
-      : "#2563EB";
+const StatusBadge = ({ status }) => {
+  if (status === "approved") {
+    return (
+      <View style={[styles.statusBadge, styles.statusApproved]}>
+        <Text style={[styles.statusText, styles.statusApprovedText]}>Approved</Text>
+      </View>
+    );
+  }
+
+  if (status === "pending") {
+    return (
+      <View style={[styles.statusBadge, styles.statusPending]}>
+        <Text style={[styles.statusText, styles.statusPendingText]}>Pending</Text>
+      </View>
+    );
+  }
 
   return (
-    <Pressable
-      onPress={status === "approved" ? onPressView : onPressEnroll}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.card,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabledCard,
-      ]}
-    >
+    <View style={[styles.statusBadge, styles.statusAvailable]}>
+      <Text style={[styles.statusText, styles.statusAvailableText]}>Available</Text>
+    </View>
+  );
+};
+
+export default function ClassEnrollCard({
+  item,
+  status = "",
+  onPressView,
+  onPressEnroll,
+}) {
+  const canView = status === "approved";
+  const isPending = status === "pending";
+
+  const imageSource = getImageSource(item);
+  const className = String(item?.className || "Class");
+  const teacherName = String(item?.teacherName || item?.teacher || "").trim();
+
+  const actionText = canView
+    ? "View Lessons"
+    : isPending
+    ? "Request Pending"
+    : "Enroll Now";
+
+  return (
+    <View style={styles.card}>
       <View style={styles.imageWrap}>
-        {imgUrl ? (
-          <Image source={{ uri: imgUrl }} style={styles.image} resizeMode="cover" />
+        {imageSource ? (
+          <Image source={imageSource} style={styles.image} resizeMode="contain" />
         ) : (
-          <View style={styles.imageFallback} />
+          <View style={styles.imageFallback}>
+            <View style={styles.fallbackCircle}>
+              <Ionicons name="school-outline" size={40} color={PRIMARY} />
+            </View>
+            <View style={styles.fallbackDotOne} />
+            <View style={styles.fallbackDotTwo} />
+          </View>
         )}
       </View>
 
-      <View style={styles.info}>
-        <Text style={styles.subject} numberOfLines={2}>
-          {item?.subjectName || item?.subject || "Subject"}
-        </Text>
+      <View style={styles.body}>
+        <StatusBadge status={status} />
 
-        <Text style={styles.teacher} numberOfLines={1}>
-          {teacherName}
-        </Text>
+        <Text style={styles.className}>{className}</Text>
 
-        
-      </View>
+        {!!teacherName && (
+          <Text style={styles.metaText}>Teacher: {teacherName}</Text>
+        )}
 
-      <View style={styles.right}>
-        <View style={[styles.btn, { backgroundColor: btnBg }]}>
-          <Text style={styles.btnText}>{btnLabel}</Text>
+        <View style={styles.buttonRow}>
+          <Pressable
+            onPress={canView ? onPressView : onPressEnroll}
+            style={({ pressed }) => [
+              styles.actionBtn,
+              isPending && styles.pendingBtn,
+              pressed && styles.actionPressed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.actionBtnText,
+                isPending && styles.pendingBtnText,
+              ]}
+            >
+              {actionText}
+            </Text>
+
+            <Ionicons
+              name={
+                canView
+                  ? "play-circle-outline"
+                  : isPending
+                  ? "time-outline"
+                  : "add-circle-outline"
+              }
+              size={18}
+              color={isPending ? "#92400E" : "#FFFFFF"}
+            />
+          </Pressable>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    borderRadius: 26,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 14,
-
+    marginBottom: 16,
+    overflow: "hidden",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-
-  pressed: {
-    transform: [{ scale: 0.985 }],
-  },
-
-  disabledCard: {
-    opacity: 0.9,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
 
   imageWrap: {
-    width: 76,
-    height: 76,
-    borderRadius: 18,
-    overflow: "hidden",
-    backgroundColor: "#E5E7EB",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+    width: "100%",
+    height: 210,
+    backgroundColor: "#EEF4FF",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
 
+  // full image visible
   image: {
     width: "100%",
     height: "100%",
   },
 
   imageFallback: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#CBD5E1",
-  },
-
-  info: {
     flex: 1,
-    marginLeft: 14,
+    width: "100%",
+    alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#EEF4FF",
   },
 
-  subject: {
-    fontSize: 15,
-    fontWeight: "900",
-    color: "#0F172A",
-    lineHeight: 20,
-  },
-
-  teacher: {
-    marginTop: 5,
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#475569",
-  },
-
-  classBadge: {
-    alignSelf: "flex-start",
-    marginTop: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-
-  classBadgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#475569",
-  },
-
-  right: {
-    justifyContent: "center",
-    marginLeft: 12,
-  },
-
-  btn: {
-    minWidth: 94,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+  fallbackCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
 
-  btnText: {
-    color: "#FFFFFF",
+  fallbackDotOne: {
+    position: "absolute",
+    top: 34,
+    right: 40,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#A855F7",
+  },
+
+  fallbackDotTwo: {
+    position: "absolute",
+    bottom: 36,
+    left: 38,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#F59E0B",
+  },
+
+  body: {
+    padding: 16,
+  },
+
+  statusBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    marginBottom: 10,
+    borderWidth: 1,
+  },
+
+  statusText: {
     fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0.2,
+    fontWeight: "700",
+  },
+
+  statusApproved: {
+    backgroundColor: "#DCFCE7",
+    borderColor: "#BBF7D0",
+  },
+
+  statusApprovedText: {
+    color: "#166534",
+  },
+
+  statusPending: {
+    backgroundColor: "#FEF3C7",
+    borderColor: "#FDE68A",
+  },
+
+  statusPendingText: {
+    color: "#92400E",
+  },
+
+  statusAvailable: {
+    backgroundColor: "#EAF1FF",
+    borderColor: "#BFDBFE",
+  },
+
+  statusAvailableText: {
+    color: PRIMARY,
+  },
+
+  className: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    lineHeight: 26,
+  },
+
+  metaText: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#64748B",
+    lineHeight: 20,
+  },
+
+  buttonRow: {
+    marginTop: 16,
+    alignItems: "flex-end",
+  },
+
+  actionBtn: {
+    minWidth: 148,
+    height: 46,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    backgroundColor: PRIMARY,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  pendingBtn: {
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+
+  actionPressed: {
+    opacity: 0.92,
+  },
+
+  actionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  pendingBtnText: {
+    color: "#92400E",
   },
 });

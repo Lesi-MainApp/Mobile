@@ -7,7 +7,6 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-import { useFonts } from "expo-font";
 
 import CrossWebView from "../components/CrossWebView";
 import YoutubePlayerBox from "../components/YoutubePlayerBox";
@@ -30,10 +29,6 @@ function getYouTubeId(url = "") {
 }
 
 export default function ReviewComponent({ route }) {
-  const [fontsLoaded] = useFonts({
-    FMEmanee: require("../assets/fonts/FMEmaneex.ttf"),
-  });
-
   const title = route?.params?.title ?? "uQ,sl .‚; l¾u";
   const youtubeUrl = route?.params?.youtubeUrl ?? "https://youtu.be/30cffBrABao";
 
@@ -68,12 +63,10 @@ export default function ReviewComponent({ route }) {
     `;
   }, [videoId]);
 
-  if (!fontsLoaded) return null;
-
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* ✅ TITLE (CENTERED) */}
+        {/* ✅ TITLE */}
         <Text style={styles.titleText} numberOfLines={1}>
           {title}
         </Text>
@@ -93,7 +86,7 @@ export default function ReviewComponent({ route }) {
           </View>
         </View>
 
-        {/* ✅ DESCRIPTION (LEFT + GRAY) */}
+        {/* ✅ DESCRIPTION */}
         <Text style={styles.descText}>{description}</Text>
       </ScrollView>
     </View>
@@ -104,14 +97,14 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F8FAFC" },
   content: { padding: 16, paddingBottom: 40 },
 
-  /* ✅ Title */
+  /* ✅ Title like Live page style */
   titleText: {
-    fontFamily: "FMEmanee",
-    fontSize: 18,
+    fontSize: 13,
+    fontWeight: "900",
     color: "#0F172A",
     textAlign: "center",
     marginBottom: 10,
-    lineHeight: 22,
+    lineHeight: 18,
   },
 
   /* ✅ Video */
@@ -134,13 +127,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* ✅ Description (LEFT + GRAY) */
+  /* ✅ Description like Live page style */
   descText: {
-    fontFamily: "FMEmanee",
-    fontSize: 15,
-    color: "#6B7280", // ✅ gray
-    textAlign: "left", // ✅ left
-    lineHeight: 22,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#64748B",
+    textAlign: "left",
+    lineHeight: 16,
     marginTop: 6,
   },
 });

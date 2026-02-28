@@ -1,4 +1,3 @@
-// pages/DailyQuiz.js
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Picker } from "@react-native-picker/picker";
@@ -26,13 +25,11 @@ export default function DailyQuiz() {
   const subjectsToShow = useMemo(() => {
     if (!gradeDoc) return [];
 
-    // grades 1..11
     if (!isAL) {
       const list = Array.isArray(gradeDoc?.subjects) ? gradeDoc.subjects : [];
       return list.map((x) => x?.subject).filter(Boolean);
     }
 
-    // grades 12/13 => stream subjects
     const streams = Array.isArray(gradeDoc?.streams) ? gradeDoc.streams : [];
     const st = streams.find((s) => norm(s?.stream) === norm(stream));
     const subs = Array.isArray(st?.subjects) ? st.subjects : [];
@@ -122,6 +119,7 @@ export default function DailyQuiz() {
             selectedValue={selectedSubject}
             onValueChange={(v) => setSelectedSubject(v)}
             style={styles.picker}
+            itemStyle={styles.pickerItem}
             dropdownIconColor="#2563EB"
           >
             <Picker.Item label="Select Subject" value="" />
@@ -152,21 +150,139 @@ export default function DailyQuiz() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F8FAFC", alignItems: "center", justifyContent: "center", padding: 16 },
-  card: { width: "100%", maxWidth: 420, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 },
-  title: { fontSize: 20, fontWeight: "900", color: "#0F172A", textAlign: "center" },
-  subTitle: { fontSize: 13, color: "#334155", textAlign: "center", marginTop: 6, marginBottom: 14 },
-  infoRow: { fontSize: 12, fontWeight: "700", color: "#334155", textAlign: "center", marginTop: 4 },
-  bold: { fontWeight: "900", color: "#0F172A" },
-  label: { fontSize: 12, fontWeight: "800", color: "#0F172A", marginBottom: 6, marginTop: 14 },
-  pickerWrap: { borderWidth: 1, borderColor: "#CBD5E1", borderRadius: 14, overflow: "hidden", backgroundColor: "#F1F5F9" },
-  picker: { width: "100%", color: "#0F172A" },
-  startBtn: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#2563EB", marginTop: 16 },
-  startBtnDisabled: { backgroundColor: "#94A3B8" },
-  startBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
-  pressed: { transform: [{ scale: 0.99 }], opacity: 0.92 },
-  helperText: { marginTop: 10, textAlign: "center", color: "#64748B", fontSize: 12, fontWeight: "600" },
-  center: { flex: 1, backgroundColor: "#F8FAFC", alignItems: "center", justifyContent: "center", padding: 16 },
-  primaryBtn: { marginTop: 14, backgroundColor: "#2563EB", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
-  primaryBtnText: { color: "#FFFFFF", fontWeight: "900", fontSize: 12 },
+  screen: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#0F172A",
+    textAlign: "center",
+    lineHeight: 30,
+  },
+
+  subTitle: {
+    fontSize: 15,
+    color: "#334155",
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 14,
+    lineHeight: 24,
+  },
+
+  infoRow: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#334155",
+    textAlign: "center",
+    marginTop: 4,
+    lineHeight: 22,
+  },
+
+  bold: {
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+
+  label: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#334155",
+    marginBottom: 8,
+    marginTop: 14,
+  },
+
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#F1F5F9",
+  },
+
+  picker: {
+    width: "100%",
+    color: "#0F172A",
+  },
+
+  // ONLY this uses AbhayaLibre
+  pickerItem: {
+    fontFamily: "AbhayaLibre_700Bold",
+    fontSize: 10,
+    color: "#0F172A",
+  },
+
+  startBtn: {
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2563EB",
+    marginTop: 16,
+  },
+
+  startBtnDisabled: {
+    backgroundColor: "#94A3B8",
+  },
+
+  startBtnText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
+  },
+
+  pressed: {
+    transform: [{ scale: 0.99 }],
+    opacity: 0.92,
+  },
+
+  helperText: {
+    marginTop: 10,
+    textAlign: "center",
+    color: "#64748B",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  center: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+  },
+
+  primaryBtn: {
+    marginTop: 14,
+    backgroundColor: "#2563EB",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+
+  primaryBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "900",
+    fontSize: 12,
+  },
 });

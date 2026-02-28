@@ -1,4 +1,8 @@
-// pages/Live.js
+// pages/Live.js ✅ FULL CODE
+// ✅ ONLY these 5 texts translate when Sinhala (legacy font only for them):
+//    Live Classes, Date, Time, LIVE, Join Class
+// ✅ All other text stays English
+// ✅ Fetched data not translated
 import React, { useMemo } from "react";
 import {
   View,
@@ -10,6 +14,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useGetStudentLivesQuery } from "../app/liveApi";
+import useT from "../app/i18n/useT";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -40,7 +45,13 @@ const formatTime = (iso) => {
 };
 
 export default function Live() {
-  const { data, isLoading, isFetching, error, refetch } = useGetStudentLivesQuery();
+  const { t, lang, sinFont } = useT();
+  const isSi = lang === "si";
+  const LBL_REG = isSi ? sinFont("regular") : null;
+  const LBL_BOLD = isSi ? sinFont("bold") : null;
+
+  const { data, isLoading, isFetching, error, refetch } =
+    useGetStudentLivesQuery();
 
   const lives = useMemo(() => {
     const list = data?.lives || [];
@@ -53,7 +64,8 @@ export default function Live() {
         return now - t <= ONE_DAY_MS;
       })
       .sort(
-        (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+        (a, b) =>
+          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
       );
   }, [data]);
 
@@ -63,10 +75,20 @@ export default function Live() {
     if (can) Linking.openURL(url);
   };
 
+  // ✅ ONLY 5 strings translated
+  const UI = {
+    pageTitle: isSi ? t("liveTitle") : "Live Classes",
+    date: isSi ? t("liveDate") : "Date",
+    time: isSi ? t("liveTime") : "Time",
+    live: isSi ? t("liveBadge") : "LIVE",
+    join: isSi ? t("liveJoin") : "Join Class",
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.screen, styles.centerWrap]}>
         <ActivityIndicator size="large" color="#DC2626" />
+        {/* keep English */}
         <Text style={styles.stateText}>Loading live classes...</Text>
       </View>
     );
@@ -76,8 +98,10 @@ export default function Live() {
     return (
       <View style={[styles.screen, styles.centerWrap]}>
         <View style={styles.stateCard}>
+          {/* keep English */}
           <Text style={styles.errorTitle}>Failed to load live classes</Text>
           <Pressable onPress={refetch} style={styles.retryBtn}>
+            {/* keep English */}
             <Text style={styles.retryBtnText}>Retry</Text>
           </Pressable>
         </View>
@@ -87,16 +111,19 @@ export default function Live() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.pageTitle}>Live Classes</Text>
+      {/* ✅ translated title + legacy font only */}
+      <Text style={[styles.pageTitle, LBL_BOLD]}>{UI.pageTitle}</Text>
 
       {isFetching ? (
         <View style={styles.refreshWrap}>
+          {/* keep English */}
           <Text style={styles.refreshText}>Refreshing...</Text>
         </View>
       ) : null}
 
       {lives.length === 0 ? (
         <View style={styles.emptyWrap}>
+          {/* keep English */}
           <Text style={styles.emptyText}>No live classes right now.</Text>
         </View>
       ) : (
@@ -115,9 +142,11 @@ export default function Live() {
               <View style={styles.card}>
                 <View style={styles.headerRow}>
                   <View style={styles.headerLeft}>
+                    {/* fetched title stays same */}
                     <Text style={styles.title} numberOfLines={1}>
                       {title}
                     </Text>
+                    {/* fetched teacher stays same */}
                     <Text style={styles.teacher} numberOfLines={1}>
                       {teacher}
                     </Text>
@@ -125,26 +154,37 @@ export default function Live() {
 
                   <View style={styles.liveBadge}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.liveBadgeText}>LIVE</Text>
+                    {/* ✅ translated LIVE badge + legacy font only */}
+                    <Text style={[styles.liveBadgeText, LBL_BOLD]}>{UI.live}</Text>
                   </View>
                 </View>
 
                 <View style={styles.infoRow}>
                   <View style={styles.infoItem}>
-                    <Text style={styles.infoLabel}>Date</Text>
-                    <Text style={styles.infoValue}>{dateText || "-"}</Text>
+                    {/* ✅ translated label + legacy font only */}
+                    <Text style={[styles.infoLabel, LBL_REG]}>{UI.date}</Text>
+                    <Text style={styles.infoValue} numberOfLines={1}>
+                      {dateText || "-"}
+                    </Text>
                   </View>
 
                   <View style={styles.infoDivider} />
 
                   <View style={styles.infoItem}>
-                    <Text style={styles.infoLabel}>Time</Text>
-                    <Text style={styles.infoValue}>{timeText || "-"}</Text>
+                    {/* ✅ translated label + legacy font only */}
+                    <Text style={[styles.infoLabel, LBL_REG]}>{UI.time}</Text>
+                    <Text style={styles.infoValue} numberOfLines={1}>
+                      {timeText || "-"}
+                    </Text>
                   </View>
                 </View>
 
-                <Pressable style={styles.joinBtn} onPress={() => onJoin(item?.zoomLink)}>
-                  <Text style={styles.joinBtnText}>Join Class</Text>
+                <Pressable
+                  style={styles.joinBtn}
+                  onPress={() => onJoin(item?.zoomLink)}
+                >
+                  {/* ✅ translated Join Class + legacy font only */}
+                  <Text style={[styles.joinBtnText, LBL_BOLD]}>{UI.join}</Text>
                 </Pressable>
               </View>
             );
@@ -173,16 +213,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "900",
     color: "#DC2626",
-    marginBottom: 14,
+    marginBottom: 10,
   },
 
   refreshWrap: {
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   refreshText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: "#64748B",
   },
@@ -198,8 +238,8 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 360,
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 18,
+    borderRadius: 16,
+    padding: 16,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -213,26 +253,26 @@ const styles = StyleSheet.create({
   },
 
   retryBtn: {
-    marginTop: 12,
+    marginTop: 10,
     backgroundColor: "#DC2626",
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
   },
 
   retryBtnText: {
     color: "#FFFFFF",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
   },
 
   emptyWrap: {
-    marginTop: 24,
+    marginTop: 20,
     alignItems: "center",
   },
 
   emptyText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: "#64748B",
     textAlign: "center",
@@ -245,39 +285,39 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 14,
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   headerRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 8,
   },
 
   headerLeft: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 4,
   },
 
   title: {
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: "900",
     color: "#0F172A",
   },
 
   teacher: {
-    marginTop: 4,
-    fontSize: 13,
+    marginTop: 2,
+    fontSize: 9,
     fontWeight: "700",
     color: "#64748B",
   },
@@ -289,41 +329,41 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#FECACA",
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
 
   liveDot: {
-    width: 8,
-    height: 8,
+    width: 6,
+    height: 6,
     borderRadius: 999,
     backgroundColor: "#DC2626",
-    marginRight: 6,
+    marginRight: 5,
   },
 
   liveBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "900",
     color: "#DC2626",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
 
   infoRow: {
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: 8,
+    marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    borderRadius: 14,
+    borderRadius: 10,
     overflow: "hidden",
   },
 
   infoItem: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
   },
 
   infoDivider: {
@@ -333,32 +373,32 @@ const styles = StyleSheet.create({
   },
 
   infoLabel: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: "700",
     color: "#64748B",
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   infoValue: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "800",
     color: "#0F172A",
   },
 
   joinBtn: {
     alignSelf: "center",
-    minWidth: 150,
+    minWidth: 126,
     backgroundColor: "#DC2626",
-    borderRadius: 12,
-    paddingHorizontal: 22,
-    paddingVertical: 11,
+    borderRadius: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
     alignItems: "center",
     justifyContent: "center",
   },
 
   joinBtnText: {
     color: "#FFFFFF",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "900",
   },
 });

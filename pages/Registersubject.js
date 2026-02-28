@@ -1,4 +1,3 @@
-// pages/Registersubject.js
 import React, { useMemo } from "react";
 import {
   View,
@@ -69,7 +68,7 @@ export default function Registersubject() {
                 {/* Top Row */}
                 <View style={styles.topRow}>
                   <View style={styles.titleWrap}>
-                    <Text style={styles.paperTitle} numberOfLines={2}>
+                    <Text style={styles.paperTitle} numberOfLines={1}>
                       {title}
                     </Text>
                   </View>
@@ -122,11 +121,11 @@ const styles = StyleSheet.create({
   },
 
   pageTitle: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: "900",
     color: "#214294",
     textAlign: "center",
-    marginBottom: 14,
+    marginBottom: 10,
     letterSpacing: 0.2,
   },
 
@@ -137,15 +136,15 @@ const styles = StyleSheet.create({
   stateWrap: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 34,
+    paddingTop: 30,
   },
 
   stateCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 20,
+    padding: 16,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -160,16 +159,16 @@ const styles = StyleSheet.create({
 
   errTitle: {
     color: "#0F172A",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 14,
     textAlign: "center",
   },
 
   retryBtn: {
-    marginTop: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
     backgroundColor: "#EFF6FF",
     borderWidth: 1,
     borderColor: "#BFDBFE",
@@ -177,37 +176,36 @@ const styles = StyleSheet.create({
 
   tryAgain: {
     color: "#214294",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
   },
 
   centerInfo: {
     textAlign: "center",
     color: "#64748B",
-    fontWeight: "800",
-    fontSize: 14,
+    fontWeight: "700",
+    fontSize: 13,
   },
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 14,
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   topRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 8,
   },
 
   titleWrap: {
@@ -216,29 +214,29 @@ const styles = StyleSheet.create({
   },
 
   paperTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "900",
     color: "#0F172A",
-    lineHeight: 22,
+    lineHeight: 18,
   },
 
   statusBadge: {
     backgroundColor: "#ECFDF5",
     borderWidth: 1,
     borderColor: "#BBF7D0",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
 
   statusText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "900",
     color: "#15803D",
     textTransform: "uppercase",
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
 
   typeRow: {
@@ -246,41 +244,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 8,
   },
 
   typeLabel: {
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 10,
+    fontWeight: "700",
     color: "#64748B",
   },
 
   typeBadge: {
-    maxWidth: "68%",
+    maxWidth: "64%",
     backgroundColor: "#EEF2FF",
     borderWidth: 1,
     borderColor: "#C7D2FE",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
 
   typeBadgeText: {
-    fontSize: 12,
-    fontWeight: "900",
+    fontSize: 10,
+    fontWeight: "800",
     color: "#3730A3",
   },
 
   divider: {
     height: 1,
     backgroundColor: "#E2E8F0",
-    marginTop: 14,
-    marginBottom: 14,
+    marginTop: 10,
+    marginBottom: 10,
   },
 
   infoGrid: {
     flexDirection: "row",
-    gap: 10,
+    gap: 8,
   },
 
   infoCard: {
@@ -288,22 +286,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 8,
     alignItems: "center",
     justifyContent: "center",
   },
 
   infoHeading: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: "700",
     color: "#64748B",
-    marginBottom: 4,
+    marginBottom: 3,
   },
 
   infoValue: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "900",
     color: "#0F172A",
   },

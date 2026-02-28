@@ -7,7 +7,11 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import * as Font from "expo-font";
-import { AbhayaLibre_700Bold } from "@expo-google-fonts/abhaya-libre";
+import { NotoSerifSinhala_700Bold } from "@expo-google-fonts/noto-serif-sinhala";
+import {
+  AbhayaLibre_700Bold,
+  AbhayaLibre_400Regular,
+} from "@expo-google-fonts/abhaya-libre";
 
 import RootLayout from "./Layouts/RootLayout";
 import SecondLayout from "./Layouts/SecondLayout";
@@ -96,7 +100,11 @@ export default function App() {
         await Font.loadAsync({
           FM_Derana: require("./assets/fonts/FM_Derana.ttf"),
           FMEmaneex: require("./assets/fonts/FMEmaneex.ttf"),
+          NotoSerifSinhala_700Bold,
           AbhayaLibre_700Bold,
+
+          // custom key for answers text
+          AbhayaLibre_300Bold: AbhayaLibre_400Regular,
         });
       } catch (e) {
         console.log("Font load error:", e);
@@ -150,7 +158,6 @@ export default function App() {
               name="EnrollSubjects"
               component={EnrollSubjectsWithLayout}
             />
-
             <Stack.Screen
               name="Registersubject"
               component={RegistersubjectWithLayout}

@@ -120,13 +120,17 @@ export default function Lessons({ route }) {
                 </View>
               </View>
 
-              <Text style={styles.lessonTitle}>{lessonTitle}</Text>
+              <Text style={styles.lessonTitle} numberOfLines={2}>
+                {lessonTitle}
+              </Text>
 
               <View style={styles.divider} />
 
               <View style={styles.descCard}>
                 <Text style={styles.descLabel}>Description</Text>
-                <Text style={styles.descText}>{lessonDescription}</Text>
+                <Text style={styles.descText} numberOfLines={3}>
+                  {lessonDescription}
+                </Text>
               </View>
 
               <View style={styles.buttonRow}>
@@ -196,126 +200,127 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  // compact card like Live page, same design kept
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 14,
+    borderRadius: 18,
+    padding: 10,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 10,
+    gap: 8,
   },
 
   lessonBadge: {
     backgroundColor: "#DBEAFE",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
   },
 
   lessonBadgeText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "700",
     color: "#1D4ED8",
   },
 
   metaWrap: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
   },
 
   metaBox: {
-    minWidth: 84,
+    minWidth: 70,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#D9E2EC",
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    borderRadius: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     alignItems: "center",
   },
 
   metaLabel: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: "600",
     color: "#64748B",
-    marginBottom: 3,
+    marginBottom: 2,
   },
 
   metaValue: {
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: "700",
     color: "#0F172A",
   },
 
   lessonTitle: {
-    marginTop: 14,
-    fontSize: 22,
+    marginTop: 8,
+    fontSize: 15,
     fontWeight: "700",
     color: "#0F172A",
-    lineHeight: 30,
+    lineHeight: 20,
     fontFamily: "AbhayaLibre_700Bold",
   },
 
   divider: {
     height: 1,
     backgroundColor: "#E2E8F0",
-    marginTop: 14,
-    marginBottom: 14,
+    marginTop: 8,
+    marginBottom: 8,
   },
 
   descCard: {
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#D9E2EC",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
 
   descLabel: {
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: "700",
     color: "#334155",
-    marginBottom: 6,
+    marginBottom: 4,
   },
 
   descText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "700",
     color: "#475569",
-    lineHeight: 24,
+    lineHeight: 18,
     fontFamily: "AbhayaLibre_700Bold",
   },
 
   buttonRow: {
-    marginTop: 14,
+    marginTop: 8,
     alignItems: "flex-end",
   },
 
   watchBtn: {
     backgroundColor: "#2563EB",
-    paddingHorizontal: 20,
-    paddingVertical: 11,
-    borderRadius: 14,
-    minWidth: 122,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    minWidth: 98,
     alignItems: "center",
     shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   watchBtnPressed: {
@@ -324,7 +329,7 @@ const styles = StyleSheet.create({
 
   watchText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "700",
   },
 });
