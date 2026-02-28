@@ -1,4 +1,3 @@
-// pages/Lessons.js
 import React, { useMemo } from "react";
 import {
   View,
@@ -76,8 +75,6 @@ export default function Lessons({ route }) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      
-
       {!classId ? (
         <Text style={styles.centerInfo}>Missing class</Text>
       ) : isLoading ? (
@@ -161,15 +158,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 14,
     paddingBottom: 120,
-  },
-
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-    textAlign: "center",
-    marginBottom: 16,
-    letterSpacing: 0.2,
   },
 
   stateWrap: {
@@ -274,9 +262,10 @@ const styles = StyleSheet.create({
   lessonTitle: {
     marginTop: 14,
     fontSize: 22,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#0F172A",
-    lineHeight: 28,
+    lineHeight: 30,
+    fontFamily: "AbhayaLibre_700Bold",
   },
 
   divider: {
@@ -304,9 +293,10 @@ const styles = StyleSheet.create({
 
   descText: {
     fontSize: 15,
-    fontWeight: "400",
+    fontWeight: "700",
     color: "#475569",
-    lineHeight: 22,
+    lineHeight: 24,
+    fontFamily: "AbhayaLibre_700Bold",
   },
 
   buttonRow: {

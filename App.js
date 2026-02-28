@@ -1,4 +1,3 @@
-// App.js
 import React, { useEffect, useState } from "react";
 import { StatusBar, View, ActivityIndicator } from "react-native";
 import { Provider } from "react-redux";
@@ -8,6 +7,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import * as Font from "expo-font";
+import { AbhayaLibre_700Bold } from "@expo-google-fonts/abhaya-libre";
 
 import RootLayout from "./Layouts/RootLayout";
 import SecondLayout from "./Layouts/SecondLayout";
@@ -96,6 +96,7 @@ export default function App() {
         await Font.loadAsync({
           FM_Derana: require("./assets/fonts/FM_Derana.ttf"),
           FMEmaneex: require("./assets/fonts/FMEmaneex.ttf"),
+          AbhayaLibre_700Bold,
         });
       } catch (e) {
         console.log("Font load error:", e);
@@ -108,7 +109,7 @@ export default function App() {
   if (!fontsReady) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator />
+        <ActivityIndicator size="small" color="#2563EB" />
       </View>
     );
   }
@@ -145,7 +146,6 @@ export default function App() {
             <Stack.Screen name="Lessons" component={LessonsWithLayout} />
             <Stack.Screen name="ViewLesson" component={ViewLessonWithLayout} />
 
-            {/* Enroll page with bottom bar */}
             <Stack.Screen
               name="EnrollSubjects"
               component={EnrollSubjectsWithLayout}
